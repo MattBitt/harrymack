@@ -96,14 +96,31 @@ def fix_image(location, filename, audio_extension, img_extension):
 
 IMPORT_CSV = "HarryMackClips.csv"
 EXTENSION = "mp3"
-MUSIC_ROOT = './musicroot/'
+
+
 now = datetime.now()
 dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
 print("\n\n\nStarting Program: ", dt_string)
-if os.path.exists('./' + IMPORT_CSV):
+
+
+# This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
+music_roots = ['/music/', './musicroot/']
+music_root = None
+for mr in music_roots:
+    if os.path.exists(mr):
+        music_root = mr
+if not music_root:
+    print("No music root directory found.  Please check the paths and try again.")
+    exit()
+else:
+    print(f"Music root directory = {music_root}")
+
+
+
+if os.path.exists(IMPORT_CSV):
     clips = import_csv(IMPORT_CSV)
 else:
-    print("No CSV file to import")
+    print("No CSV file found.  Please check the path and try again.")
     exit()
 
 album = None
@@ -112,7 +129,7 @@ for clip in clips:
     if not clip['AlbumName'] == album:
         new_album = True
         album = clip['AlbumName']
-        dest_directory = MUSIC_ROOT + album + '/'
+        dest_directory = music_root + album + '/'
         create_album_folder(dest_directory)
     else:
         album = clip['AlbumName']
