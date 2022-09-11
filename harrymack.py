@@ -99,7 +99,7 @@ EXTENSION = "mp3"
 MUSIC_ROOT = './musicroot/'
 now = datetime.now()
 dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-print("Starting Program: ", dt_string)
+print("\n\n\nStarting Program: ", dt_string)
 if os.path.exists('./' + IMPORT_CSV):
     clips = import_csv(IMPORT_CSV)
 else:

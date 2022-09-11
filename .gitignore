@@ -1,0 +1,6 @@
+*.csv
+*.xl*
+*.mp3
+*.jpg
+*.webp
+.venv/*
