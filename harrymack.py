@@ -1,7 +1,7 @@
 import subprocess
 import csv
 import os
-import time
+from datetime import datetime
 import eyed3
 import shutil
 from PIL import Image
@@ -63,6 +63,8 @@ def update_id3(location, inputfile, extension, artist, album, title, track_num):
     audiofile.tag.track_num = track_num
     #Need to convert image to jpg before embedding
     #'file.tag.images.set(3, imagedata , "image/jpeg" ,u"Description")
+
+    #Need to add the year as well.  Should be able to get from yt-dlp.
     audiofile.tag.save()
 
 def create_album_folder(path):
@@ -95,6 +97,9 @@ def fix_image(location, filename, audio_extension, img_extension):
 IMPORT_CSV = "HarryMackClips.csv"
 EXTENSION = "mp3"
 MUSIC_ROOT = './musicroot/'
+now = datetime.now()
+dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
+print("Starting Program: ", dt_string)
 if os.path.exists('./' + IMPORT_CSV):
     clips = import_csv(IMPORT_CSV)
 else:
