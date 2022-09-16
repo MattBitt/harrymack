@@ -18,18 +18,18 @@ def youtube_download(url, filename):
     filename = filename[:-4]
     if not(os.path.exists(filename)):
         yt_dl = subprocess.run(["yt-dlp", 
-        '--no-warnings',
-        '--extract-audio', 
-        #'--write-info-json',  # this works but not sure if i need to use it.  contains upload date and description but probably pretty hard to extract
-        '--write-description',
-        '--audio-format',
-        'mp3',
-        '--audio-quality',
-        '0',
-        "-o", 
-        filename + " (%(upload_date)s).mp3",
-        "--write-thumbnail", 
-        url])
+            '--no-warnings',
+            '--extract-audio', 
+            #'--write-info-json',  # this works but not sure if i need to use it.  contains upload date and description but probably pretty hard to extract
+            '--write-description',
+            '--audio-format',
+            'mp3',
+            '--audio-quality',
+            '0',
+            "-o", 
+            filename + " (%(upload_date)s).mp3",
+            "--write-thumbnail", 
+            url])
         if yt_dl.returncode:
             print("There was an error processing %d" % yt_dl.returncode )
             return False
@@ -44,20 +44,22 @@ def import_csv(csv_name):
 
 def extract_audio(source, destination, start_time, end_time):
     """ffmpeg -i ./downloads/37duQAUSYXo.mp4 -ss 00:00:20 -to 00:00:40 -c copy ./downloads/file-2.mkv"""
-    ffmpeg = subprocess.run(['ffmpeg', 
-    '-y',
-    '-i', 
-    source, 
-    '-ss', 
-    start_time, 
-    '-to', 
-    end_time,
-    destination])
+    if not os.path.exists(destination):
+        ffmpeg = subprocess.run(['ffmpeg', 
+            '-y',
+            '-i', 
+            source, 
+            '-ss', 
+            start_time, 
+            '-to', 
+            end_time,
+            destination])
 
-    if ffmpeg.returncode:
-        print("FFMPEG returned: %d" % ffmpeg.returncode)
-        exit()
-
+        if ffmpeg.returncode:
+            print("FFMPEG returned: {ffmpeg.returncode}.  Quitting")
+            exit()
+    else:
+        print(f"File {destination} already exists")
 
 def update_id3(mp3file, artist, album, title, track_num, year, img):
     
@@ -75,12 +77,18 @@ def update_id3(mp3file, artist, album, title, track_num, year, img):
 
 def create_album_folder(path):
     if not os.path.exists(path):
-        os.makedirs(path)
+        os.umask(0)
+        os.makedirs(path, mode=0o777)
 
-def move_file(source, destination):
+def move_file(source, destination, overwrite):
     if os.path.exists(destination):
-        os.remove(destination)
+        if overwrite:
+            os.remove(destination)
+        else:
+            print("Could not overwrite destination file {destination}")
+            return false  
     shutil.move(source, destination)
+    return True
 
 def parse_files(dir, base_filename):
     if dir[-1] != "/":
@@ -178,6 +186,10 @@ for clip in clips:
     source_directory = './downloads/'
     destination_directory = music_root + album + '/' # /music/
     source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
+    new_file = destination_directory + filename
+    if os.path.exists(new_file):
+        print(f"File {new_file} already exists. Skipping")
+        continue
 
 
     if album != previous_album:
@@ -198,7 +210,7 @@ for clip in clips:
     
     downloaded = youtube_download(url, source_file)
     if not downloaded:
-        print("Error downloading clip")
+        print("Error downloading clip. Quitting")
         exit()
     
     # This function takes the source (downloads) directory and base filename
@@ -212,16 +224,17 @@ for clip in clips:
         downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
         if new_album:
             #album_image = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-            move_file(downloaded_files['image'], destination_directory  + "album.jpg")
+            move_file(downloaded_files['image'], destination_directory  + "album.jpg", True)
             downloaded_files['image'] = destination_directory  + "album.jpg"
         
     else:
-        print("Image not returned")
+        print("Image not returned. Quitting")
         exit()
 
-    new_file = destination_directory + filename
+   
 
 
     extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
     update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
+print(f"Finished processing {len(clips)} tracks.")
     
