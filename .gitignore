@@ -1,6 +1,7 @@
 *.csv
 *.xl*
-*.mp3
+*.mp3*
 *.jpg
 *.webp
 .venv/*
+./downloads/*
