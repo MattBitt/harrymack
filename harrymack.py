@@ -221,7 +221,7 @@ for clip in clips:
 
     new_file = destination_directory + filename
 
-gi
+
     extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
     update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
     
