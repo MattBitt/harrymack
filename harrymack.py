@@ -132,109 +132,109 @@ def get_year(file):
     return int(file[start + 1:start + 5])
 
 
-
-IMPORT_CSV = "HarryMackClips.csv"
-EXTENSION = "mp3"
-VERSION = "v1.0.0"
-# Log Line for program staring
-now = datetime.now()
-dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-print(f"\n\n\nStarting Program ({VERSION}): {dt_string})")
-
-
-# This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
-# ./musicroot will be used on 'Windows' for development.  
-# /music/ will be the Docker volume used on the server
-music_roots = ['/music/', './musicroot/']
-music_root = None
-for mr in music_roots:
-    if os.path.exists(mr):
-        music_root = mr
-if not music_root:
-    print("No music root directory found.  Please check the paths and try again.")
-    exit()
-else:
-    print(f"Music root directory = {music_root}")
+if __name__ == "__main__":
+    IMPORT_CSV = "HarryMackClips.csv"
+    EXTENSION = "mp3"
+    VERSION = "v1.0.0"
+    # Log Line for program staring
+    now = datetime.now()
+    dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
+    print(f"\n\n\nStarting Program ({VERSION}): {dt_string})")
 
 
-# Check to make sure a CSV file is available.  The Excel macro should create CSV files in the "Windows" folder as well as the Unraid folder
-if os.path.exists(IMPORT_CSV):
-    clips = import_csv(IMPORT_CSV)
-else:
-    print("No CSV file found.  Please check the path and try again.")
-    exit()
-
-
-album = None
-previous_album = None
-new_album = False
-
-# Loop through each clip in the CSV
-for clip in clips:
-
-    base_name = clip['WholeName'] # NPdKxsSE5JQ
-    artist = clip['ArtistName'] # Harry Mack
-    album = clip['AlbumName'] # Omegle Bars 1
-    track_number = clip['TrackNumber'] # 1
-    track_title = clip['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-    filename = track_number + " - " + track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-    start_time = clip['StartTime']
-    end_time = clip['EndTime']
-    url = clip['URL']
-    
-    album_image = ""
-    source_directory = './downloads/'
-    destination_directory = music_root + album + '/' # /music/
-    source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
-    new_file = destination_directory + filename
-    if os.path.exists(new_file):
-        print(f"File {new_file} already exists. Skipping")
-        continue
-
-
-    if album != previous_album:
-        # This clip is part of a different album than the previous.  
-        # if there was a previous album should i delete it?  probably not.  should wait until the end and delete everthing in the downloads folder
-        # should i check for files in downloads folder on start?  give warning?
-        # Create the folder /musicroot/album
-        # Take the album image and resize it to 1280x1280.  Make a copy called 'album.jpg'.  move to /musicroot/album folder
-        new_album = True
-        previous_album = album
-        create_album_folder(destination_directory)
-    else:
-        new_album = False
-
-    # This function call should create 3 files:
-    #   the mp3 file, the description file, and the image file
-    #   once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
-    
-    downloaded = youtube_download(url, source_file)
-    if not downloaded:
-        print("Error downloading clip. Quitting")
+    # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
+    # ./musicroot will be used on 'Windows' for development.  
+    # /music/ will be the Docker volume used on the server
+    music_roots = ['/music/', './musicroot/']
+    music_root = None
+    for mr in music_roots:
+        if os.path.exists(mr):
+            music_root = mr
+    if not music_root:
+        print("No music root directory found.  Please check the paths and try again.")
         exit()
-    
-    # This function takes the source (downloads) directory and base filename
-    # It will extract the year from the upload date, rename the files with the date removed and assign the files
-    # to the music, audio, and description items in the files dictionary 
-    downloaded_files, year = parse_files(source_directory, base_name)
-    
-    if downloaded_files['image']:
-        if downloaded_files['image'][-4:] == 'webp': #convert webp to jpg file
-            downloaded_files['image'] = convert_to_jpg(downloaded_files['image'], downloaded_files['image'][:-5] + '.jpg')
-        downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-        if new_album:
-            #album_image = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-            move_file(downloaded_files['image'], destination_directory  + "album.jpg", True)
-            downloaded_files['image'] = destination_directory  + "album.jpg"
+    else:
+        print(f"Music root directory = {music_root}")
+
+
+    # Check to make sure a CSV file is available.  The Excel macro should create CSV files in the "Windows" folder as well as the Unraid folder
+    if os.path.exists(IMPORT_CSV):
+        clips = import_csv(IMPORT_CSV)
+    else:
+        print("No CSV file found.  Please check the path and try again.")
+        exit()
+
+
+    album = None
+    previous_album = None
+    new_album = False
+
+    # Loop through each clip in the CSV
+    for clip in clips:
+
+        base_name = clip['WholeName'] # NPdKxsSE5JQ
+        artist = clip['ArtistName'] # Harry Mack
+        album = clip['AlbumName'] # Omegle Bars 1
+        track_number = clip['TrackNumber'] # 1
+        track_title = clip['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        filename = track_number + " - " + track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        start_time = clip['StartTime']
+        end_time = clip['EndTime']
+        url = clip['URL']
         
-    else:
-        print("Image not returned. Quitting")
-        exit()
+        album_image = ""
+        source_directory = './downloads/'
+        destination_directory = music_root + album + '/' # /music/
+        source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
+        new_file = destination_directory + filename
+        if os.path.exists(new_file):
+            print(f"File {new_file} already exists. Skipping")
+            continue
 
-   
+
+        if album != previous_album:
+            # This clip is part of a different album than the previous.  
+            # if there was a previous album should i delete it?  probably not.  should wait until the end and delete everthing in the downloads folder
+            # should i check for files in downloads folder on start?  give warning?
+            # Create the folder /musicroot/album
+            # Take the album image and resize it to 1280x1280.  Make a copy called 'album.jpg'.  move to /musicroot/album folder
+            new_album = True
+            previous_album = album
+            create_album_folder(destination_directory)
+        else:
+            new_album = False
+
+        # This function call should create 3 files:
+        #   the mp3 file, the description file, and the image file
+        #   once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
+        
+        downloaded = youtube_download(url, source_file)
+        if not downloaded:
+            print("Error downloading clip. Quitting")
+            exit()
+        
+        # This function takes the source (downloads) directory and base filename
+        # It will extract the year from the upload date, rename the files with the date removed and assign the files
+        # to the music, audio, and description items in the files dictionary 
+        downloaded_files, year = parse_files(source_directory, base_name)
+        
+        if downloaded_files['image']:
+            if downloaded_files['image'][-4:] == 'webp': #convert webp to jpg file
+                downloaded_files['image'] = convert_to_jpg(downloaded_files['image'], downloaded_files['image'][:-5] + '.jpg')
+            downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
+            if new_album:
+                #album_image = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
+                move_file(downloaded_files['image'], destination_directory  + "album.jpg", True)
+                downloaded_files['image'] = destination_directory  + "album.jpg"
+            
+        else:
+            print("Image not returned. Quitting")
+            exit()
+
+    
 
 
-    extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
-    update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
-print(f"Finished processing {len(clips)} tracks.")
+        extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
+        update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
+    print(f"Finished processing {len(clips)} tracks.")
     
