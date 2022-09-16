@@ -127,11 +127,11 @@ def get_year(file):
 
 IMPORT_CSV = "HarryMackClips.csv"
 EXTENSION = "mp3"
-
+VERSION = "v1.0.0"
 # Log Line for program staring
 now = datetime.now()
 dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-print("\n\n\nStarting Program: ", dt_string)
+print(f"\n\n\nStarting Program ({VERSION}): {dt_string})")
 
 
 # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
@@ -221,7 +221,7 @@ for clip in clips:
 
     new_file = destination_directory + filename
 
-
+gi
     extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
     update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
     
