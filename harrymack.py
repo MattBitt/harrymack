@@ -32,9 +32,8 @@ def youtube_download(url, filename):
     if not(os.path.exists(filename)):
         yt_dl = subprocess.run(["yt-dlp", 
             '--no-warnings',
-            '--quiet', 
+#            '--quiet', 
             '--extract-audio', 
-            #'--write-info-json',  # this works but not sure if i need to use it.  contains upload date and description but probably pretty hard to extract
             '--write-description',
             '--audio-format',
             'mp3',
@@ -67,9 +66,9 @@ def extract_audio(source, destination, start_time, end_time):
             start_time, 
             '-to', 
             end_time,
-            '-hide_banner',
-            '-loglevel', 
-            'warning',
+#            '-hide_banner',
+#            '-loglevel', 
+#            'warning',
             destination])
 
         if ffmpeg.returncode:
@@ -222,6 +221,7 @@ if __name__ == "__main__":
     album = None
     previous_album = None
     new_album = False
+    new_albums = []
 
     # Loop through each clip in the CSV
     for clip in clips:
@@ -254,6 +254,7 @@ if __name__ == "__main__":
             new_album = True
             previous_album = album
             create_album_folder(destination_directory)
+            new_albums.append(album)
         else:
             new_album = False
 
@@ -329,5 +330,8 @@ if __name__ == "__main__":
 
     print("Updating Plex")
     plex_update_library("Harry Mack")
+    if new_albums:
+        print(f"The following albums were created:  {new_albums}")
+
     print(f"Finished processing {len(clips)} tracks.")
     
