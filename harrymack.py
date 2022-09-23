@@ -224,7 +224,7 @@ if __name__ == "__main__":
         source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
         new_file = destination_directory + filename
         if os.path.exists(new_file):
-            print(f"File {new_file} already exists. Skipping")
+            #print(f"File {new_file} already exists. Skipping")
             continue
 
 
