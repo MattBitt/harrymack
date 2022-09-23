@@ -31,7 +31,7 @@ def youtube_download(url, filename):
     if not(os.path.exists(filename)):
         yt_dl = subprocess.run(["yt-dlp", 
             '--no-warnings',
-#            '--quiet', 
+            '--quiet', 
             '--extract-audio', 
             '--write-description',
             '--audio-format',
@@ -65,9 +65,9 @@ def extract_audio(source, destination, start_time, end_time):
             start_time, 
             '-to', 
             end_time,
-#            '-hide_banner',
-#            '-loglevel', 
-#            'warning',
+            '-hide_banner',
+            '-loglevel', 
+            'warning',
             destination])
 
         if ffmpeg.returncode:
