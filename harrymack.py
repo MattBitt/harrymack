@@ -8,9 +8,12 @@ import eyed3
 from eyed3.core import Date
 import shutil
 from PIL import Image
+from PIL import ImageDraw
 import glob
+from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
+from PIL import ImageFont
 
-
+#### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
 
 def youtube_download(url, filename):
@@ -86,9 +89,20 @@ def move_file(source, destination, overwrite):
             os.remove(destination)
         else:
             print("Could not overwrite destination file {destination}")
-            return false  
+            return False  
     shutil.move(source, destination)
     return True
+
+def copy_file(source, destination, overwrite):
+    if os.path.exists(destination):
+        if overwrite:
+            os.remove(destination)
+        else:
+            print("Could not overwrite destination file {destination}")
+            return False  
+    shutil.copy(source, destination)
+    return True
+
 
 def parse_files(dir, base_filename):
     if dir[-1] != "/":
@@ -109,8 +123,10 @@ def parse_files(dir, base_filename):
             file_list = glob.glob(dir + pattern)
             if len(file_list) == 1:
                 files[t] =  file_list[0]
-            if len(file_list) > 1:
+            elif len(file_list) > 1:
                 print(f"More than 1 file found matching the {pattern}\n{file_list}")
+            else:
+                print(f"No matching files found:  {pattern}\n{file_list}")
             
     
     year = get_year(files['audio'])
@@ -121,27 +137,38 @@ def convert_to_jpg(source, destination):
     img.save(destination, optimize=True)
     return destination
 
-def resize_image(source, destination, width, height):
-    img = Image.open(source)
-    new_img = img.resize((width,height))
-    new_img.save(destination, optimize=True)
-    return destination
+def get_fonts(dir):
+    if dir[-1] != "/":
+        dir = dir + "/"
+    return os.listdir(dir)
+    #for entry in os.scandir(dir):
+    #    if entry.name.endswith('.ttf'):
+    #        yield dir + entry.name
 
 def get_year(file):
-    start = file.find('(')
-    return int(file[start + 1:start + 5])
+    if file:
+        start = file.find('(')
+        return int(file[start + 1:start + 5])
+    else:
+        print(f"No file given.  Please try again")
+        return False
 
 
 if __name__ == "__main__":
     IMPORT_CSV = "HarryMackClips.csv"
     EXTENSION = "mp3"
     VERSION = "v1.0.0"
+    FONT_SAMPLE = False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
+    FONT_NAME = "./fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
+    FONT_SIZE = 48
+    MAX_FONT_SIZE = 48
+
     # Log Line for program staring
     now = datetime.now()
     dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
     print(f"\n\n\nStarting Program ({VERSION}): {dt_string})")
 
-
+    font_counter = 0
     # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
     # ./musicroot will be used on 'Windows' for development.  
     # /music/ will be the Docker volume used on the server
@@ -209,6 +236,7 @@ if __name__ == "__main__":
         #   once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
         
         downloaded = youtube_download(url, source_file)
+        downloaded = True
         if not downloaded:
             print("Error downloading clip. Quitting")
             exit()
@@ -221,20 +249,57 @@ if __name__ == "__main__":
         if downloaded_files['image']:
             if downloaded_files['image'][-4:] == 'webp': #convert webp to jpg file
                 downloaded_files['image'] = convert_to_jpg(downloaded_files['image'], downloaded_files['image'][:-5] + '.jpg')
-            downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
             if new_album:
                 #album_image = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-                move_file(downloaded_files['image'], destination_directory  + "album.jpg", True)
-                downloaded_files['image'] = destination_directory  + "album.jpg"
+                im = Image.open(downloaded_files['image'])
+                im = resize_image(im, 1280, 1280)
+                im.save(source_directory + "album.jpg")
+                copy_file(source_directory + 'album.jpg', destination_directory  + "album.jpg", True)
+                #downloaded_files['image'] = destination_directory  + "album.jpg"
+            #downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
+            anchor_location = (0,1100) 
+            image_dimensions = (1280, 1280)
+            text_area_dimensions = (1280, 120)
+            text_area = TextArea(text_area_dimensions, image_dimensions, anchor_location)
+            if clip['Title'][0:2] == "OB":
+                im = prepare_image(downloaded_files['image'], text_area, 1280, 1280, True)
+            else:
+                im = prepare_image(downloaded_files['image'], text_area, 1280, 1280, False)
+            draw = ImageDraw.Draw(im)
+            word_strings = clip['Words'].split(",")
+            if FONT_SAMPLE:
+                fonts = get_fonts('./fonts/')
+                font_name = './fonts/' + fonts[font_counter]
+                font_counter = font_counter + 1
+                f = ImageFont.truetype('./fonts/courbd.ttf', 96)
+                draw.rectangle([(50,50), (1230,300)], fill=(0,0,0))
+                draw.text((100,100), font_name, font=f, fill=(0,255,0))
+            else:
+                font_name = FONT_NAME
+            wg = WordGrid(text_area, word_strings, font_name)
+
+            if wg:
+                wg.draw_text_area(draw)
+                for w in wg.words:
+                    wr = w.width_rectangle()
+                    mwr = w.max_width_rectangle()
+                    #draw.rectangle(wr, fill=(0,0,255), outline=(0,0,255), width=2)
+                    #draw.rectangle(mwr, fill=(0,255,255), outline=(0,255,255), width=2)
+                wg.draw_words(draw)
+                im.save('./working/' + clip['Title'] + '.jpg')
+                downloaded_files['image'] = './working/' + clip['Title'] + '.jpg'
+            else:
+                print("Error creating WordGrid.  Check the words and try again")
+                exit()
             
+
+
         else:
             print("Image not returned. Quitting")
             exit()
 
-    
-
-
         extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
         update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
+
     print(f"Finished processing {len(clips)} tracks.")
     
