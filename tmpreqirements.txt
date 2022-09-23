@@ -3,7 +3,6 @@ charset-normalizer==2.1.1
 coverage==5.5
 deprecation==2.1.0
 eyed3==0.9.6
-filediffs==0.1.12
 filetype==1.1.0
 idna==3.4
 packaging==21.3

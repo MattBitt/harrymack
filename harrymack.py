@@ -13,6 +13,7 @@ import glob
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from PIL import ImageFont
 from plexapi.server import PlexServer
+from filediffs.filediffs_python.filediffs import file_diffs
 
 #### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
