@@ -157,7 +157,7 @@ def get_year(file):
 if __name__ == "__main__":
     IMPORT_CSV = "HarryMackClips.csv"
     EXTENSION = "mp3"
-    VERSION = "v1.0.0"
+    VERSION = "v1.1.0"
     FONT_SAMPLE = False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
     FONT_NAME = "./fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
     FONT_SIZE = 48
