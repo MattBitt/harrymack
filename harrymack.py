@@ -152,12 +152,16 @@ def convert_to_jpg(source, destination):
     return destination
 
 def get_fonts(dir):
-    if dir[-1] != "/":
-        dir = dir + "/"
+    dir = add_slash(dir)
     return os.listdir(dir)
     #for entry in os.scandir(dir):
     #    if entry.name.endswith('.ttf'):
     #        yield dir + entry.name
+
+def add_slash(path):
+    if path[-1] != "/":
+        path = path + "/"
+    return path
 
 def get_year(file):
     if file:
@@ -167,6 +171,14 @@ def get_year(file):
         print(f"No file given.  Please try again")
         return False
 
+def get_path(path_list):
+    # this function returns whichever folder exists.  path_list should be in preference order
+    for p in path_list:
+        if os.path.exists(p):
+            p = add_slash(p)
+            return p
+    print(f"No paths found {path_list}")
+    return False
 
 if __name__ == "__main__":
     IMPORT_CSV = "HarryMackClips.csv"
@@ -187,16 +199,15 @@ if __name__ == "__main__":
     # ./musicroot will be used on 'Windows' for development.  
     # /music/ will be the Docker volume used on the server
     music_roots = ['/music/', './musicroot/']
-    music_root = None
-    for mr in music_roots:
-        if os.path.exists(mr):
-            music_root = mr
-    if not music_root:
-        print("No music root directory found.  Please check the paths and try again.")
+    download_paths = ['/downloads/', './downloads/']
+    music_root = get_path(music_roots)
+    source_directory = get_path(download_paths)
+    if not music_root or not source_directory:
+        print(f"No music root/download directory found.  Please check the paths and try again. mr={music_root}, source={source_directory}")
         exit()
     else:
         print(f"Music root directory = {music_root}")
-
+        print(f"Downloads directory = {source_directory}")
 
     # Check to make sure a CSV file is available.  The Excel macro should create CSV files in the "Windows" folder as well as the Unraid folder
     if os.path.exists(IMPORT_CSV):
@@ -224,7 +235,6 @@ if __name__ == "__main__":
         url = clip['URL']
         
         album_image = ""
-        source_directory = './downloads/'
         destination_directory = music_root + album + '/' # /music/
         source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
         new_file = destination_directory + filename
