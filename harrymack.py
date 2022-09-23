@@ -138,9 +138,11 @@ def parse_files(dir, base_filename):
             if len(file_list) == 1:
                 files[t] =  file_list[0]
             elif len(file_list) > 1:
-                print(f"More than 1 file found matching the {pattern}\n{file_list}")
+                #print(f"More than 1 file found matching the {pattern}\n{file_list}")
+                pass
             else:
-                print(f"No matching files found:  {pattern}\n{file_list}")
+                #print(f"No matching files found:  {pattern}\n{file_list}")
+                pass
             
     
     year = get_year(files['audio'])
