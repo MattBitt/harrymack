@@ -12,8 +12,17 @@ from PIL import ImageDraw
 import glob
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from PIL import ImageFont
+from plexapi.server import PlexServer
 
 #### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
+
+def plex_update_library(library):
+    baseurl = 'http://192.168.0.202:32400' #the local address of your server
+    token = 'ao7MsVLaXxRWLtCoyXWm'
+    plex = PlexServer(baseurl, token)
+    harrymack = plex.library.section(library)
+    harrymack.update()
+
 
 
 def youtube_download(url, filename):
@@ -301,5 +310,7 @@ if __name__ == "__main__":
         extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
         update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
 
+    print("Updating Plex")
+    plex_update_library("Harry Mack")
     print(f"Finished processing {len(clips)} tracks.")
     
