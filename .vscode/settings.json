@@ -1,4 +1,7 @@
 {
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}/test/"
+      }, 
     "python.testing.pytestArgs": [
         "test"
     ],

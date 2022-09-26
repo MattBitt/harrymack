@@ -49,7 +49,6 @@ def import_csv(csv_name):
     return name_records
 
 def extract_audio(source, destination, start_time, end_time):
-    """ffmpeg -i ./downloads/37duQAUSYXo.mp4 -ss 00:00:20 -to 00:00:40 -c copy ./downloads/file-2.mkv"""
     if not os.path.exists(destination):
         ffmpeg = subprocess.run(['ffmpeg', 
             '-y',
@@ -175,7 +174,7 @@ def get_path(path_list):
     return False
 
 if __name__ == "__main__":
-    IMPORT_CSV = "HarryMackClips.csv"
+    IMPORT_CSV = "../HarryMackClips.csv"
     EXTENSION = "mp3"
     VERSION = "v1.3.0"
     FONT_SAMPLE = False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
@@ -192,8 +191,8 @@ if __name__ == "__main__":
     # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
     # ./musicroot will be used on 'Windows' for development.  
     # /music/ will be the Docker volume used on the server
-    music_roots = ['/music/', './media/musicroot/']
-    download_paths = ['/downloads/', './media/downloads/']
+    music_roots = ['/music/', '../media/musicroot/']
+    download_paths = ['/downloads/', '../media/downloads/']
     music_root = get_path(music_roots)
     source_directory = get_path(download_paths)
     if not music_root or not source_directory:
