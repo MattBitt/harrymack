@@ -1,5 +1,3 @@
-from email.mime import image
-from platform import java_ver
 import subprocess
 import csv
 import os
@@ -9,10 +7,11 @@ from eyed3.core import Date
 import shutil
 from PIL import Image
 from PIL import ImageDraw
-import glob
-from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from PIL import ImageFont
-from plex_functions import plex_update_library, connect_to_server
+import glob
+
+from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
+from plex_functions import plex_update_library, connect_to_server, add_mood
 
 
 #### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
@@ -128,7 +127,7 @@ def parse_files(dir, base_filename):
     for t in types:
         for pattern in patterns[t]:
             file_list = glob.glob(dir + pattern)
-            if len(file_list) == 1:
+            if len(file_list) == 1: # This always chooses the first file returned.  Need to do any other testing here?
                 files[t] =  file_list[0]
             elif len(file_list) > 1:
                 #print(f"More than 1 file found matching the {pattern}\n{file_list}")
@@ -210,13 +209,15 @@ if __name__ == "__main__":
     else:
         print("No CSV file found.  Please check the path and try again.")
         exit()
-
+    
+    # setup connection to plex
+    plex = connect_to_server()
 
     album = None
     previous_album = None
     new_album = False
     new_albums = []
-
+    moods = []
     # Loop through each clip in the CSV
     for clip in clips:
 
@@ -229,6 +230,8 @@ if __name__ == "__main__":
         start_time = clip['StartTime']
         end_time = clip['EndTime']
         url = clip['URL']
+        beatname = clip['BeatName']
+        producer = clip['Producer']
         
         album_image = ""
         destination_directory = music_root + album + '/' # /music/
@@ -321,13 +324,20 @@ if __name__ == "__main__":
 
         extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
         update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
-
+        
+        # need to add the moods after the plex library has been updated.  instead of updating the library for every track,
+        # just add it to a list.  once the library is updated (maybe sleep to allow it to finish?), loop through this list and addMood that way
+        if producer:
+            moods.append((track_title, producer))
+        
     print("Updating Plex")
-    plex = connect_to_server()
+
 
     plex_update_library(plex, "Harry Mack")
     if new_albums:
         print(f"The following albums were created:  {new_albums}")
 
     print(f"Finished processing {len(clips)} tracks.")
+    for title, producer in moods:
+        add_mood(plex, "Harry Mack", title, producer)
     
