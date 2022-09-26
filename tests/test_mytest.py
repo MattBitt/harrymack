@@ -7,3 +7,7 @@ class TestClass:
     def test_two(self):
         x = "hello"
         assert hasattr(x, "check")
+class TestClass2:
+    def test_logging(self):
+        assert "he" in "hello"
+        

@@ -8,3 +8,11 @@ __pycache__/
 ./downloads/*
 downloads/
 *.zip
+fonts/cour.ttf
+fonts/courbd.ttf
+fonts/courbi.ttf
+fonts/couri.ttf
+media/fonts/cour.ttf
+media/fonts/courbd.ttf
+media/fonts/courbi.ttf
+media/fonts/couri.ttf

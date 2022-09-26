@@ -177,9 +177,9 @@ def get_path(path_list):
 if __name__ == "__main__":
     IMPORT_CSV = "HarryMackClips.csv"
     EXTENSION = "mp3"
-    VERSION = "v1.2.0"
+    VERSION = "v1.3.0"
     FONT_SAMPLE = False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
-    FONT_NAME = "./fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
+    FONT_NAME = "./media/fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
     FONT_SIZE = 48
     MAX_FONT_SIZE = 48
 
@@ -192,8 +192,8 @@ if __name__ == "__main__":
     # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
     # ./musicroot will be used on 'Windows' for development.  
     # /music/ will be the Docker volume used on the server
-    music_roots = ['/music/', './musicroot/']
-    download_paths = ['/downloads/', './downloads/']
+    music_roots = ['/music/', './media/musicroot/']
+    download_paths = ['/downloads/', './media/downloads/']
     music_root = get_path(music_roots)
     source_directory = get_path(download_paths)
     if not music_root or not source_directory:
@@ -310,7 +310,7 @@ if __name__ == "__main__":
                     #draw.rectangle(wr, fill=(0,0,255), outline=(0,0,255), width=2)
                     #draw.rectangle(mwr, fill=(0,255,255), outline=(0,255,255), width=2)
                 wg.draw_words(draw)
-                im.save('./working/' + clip['Title'] + '.jpg')
+                im.save('.media/working/' + clip['Title'] + '.jpg')
                 downloaded_files['image'] = './working/' + clip['Title'] + '.jpg'
             else:
                 print("Error creating WordGrid.  Check the words and try again")
