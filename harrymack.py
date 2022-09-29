@@ -9,15 +9,69 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import glob
+from pyaml_env import parse_config
+
+
 
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
 
+class EmptyListError(ValueError):
+    """
+    Raised to signal the fact that a list is empty.
+    """
 
 #### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
+class Track:
+    def __init__(self, source_info):
+        self.source_video_name = source_info['WholeName'] # NPdKxsSE5JQ
+        self.artist = source_info['ArtistName'] # Harry Mack
+        self.album = source_info['AlbumName'] # Omegle Bars 1
+        self.track_number = source_info['TrackNumber'] # 1
+        self.track_title = source_info['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        self.filename = self.track_number + " - " + self.track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        self.start_time = source_info['StartTime']
+        self.end_time = source_info['EndTime']
+        self.url = source_info['URL']
+        self.beatname = source_info['BeatName']
+        self.producer = source_info['Producer']
+        self.words = source_info['Words']
 
+def load_data(source):
+    try:
+        track_info_list = import_from_csv(source)
+    except FileNotFoundError:
+        print("No CSV file found.  Please check the path and try again.")
+        exit()
+    except IndexError:
+        print("No records found in CSV file.  Please check the import and retry.")
+        exit()
+    except KeyError:
+        print("There is a problem with the CSV file.")
+        exit()
+    
+    return track_info_list
 
+def import_from_csv(csv_name):
+    if not os.path.exists(csv_name):
+        raise FileNotFoundError(f"File {csv_name} not found")
 
+    with open(csv_name, "r") as f:
+        csv_reader = csv.DictReader(f)
+        track_info = list(csv_reader)
+    
+    # CSV file exists, but there aren't any records
+    if track_info == []:
+        raise EmptyListError(f"File {csv_name} does not contain any records")
+    
+    fields = ['WholeName', 'ArtistName', 'AlbumName', 'TrackNumber', 'Title', 'StartTime', 'EndTime', 'URL', 'BeatName', 'Producer' ]
+    for f in fields:
+        if not f in track_info[0].keys():
+            raise KeyError(f"{f} does not exist in csv.  Please export and try again.")
+    return track_info
+
+def load_config(config_path):
+    return parse_config(config_path)
 
 def youtube_download(url, filename):
     # output name should not have ".ext"
@@ -41,12 +95,7 @@ def youtube_download(url, filename):
             return False
     return True
 
-def import_csv(csv_name):
 
-    with open(csv_name, "r") as f:
-        csv_reader = csv.DictReader(f)
-        name_records = list(csv_reader)
-    return name_records
 
 def extract_audio(source, destination, start_time, end_time):
     if not os.path.exists(destination):
@@ -174,27 +223,28 @@ def get_path(path_list):
     return False
 
 if __name__ == "__main__":
-    IMPORT_CSV = "../HarryMackClips.csv"
-    EXTENSION = "mp3"
-    VERSION = "v1.3.0"
-    FONT_SAMPLE = False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
-    FONT_NAME = "./media/fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
-    FONT_SIZE = 48
-    MAX_FONT_SIZE = 48
 
+    #os.environ['ENVIORNMENT'] = "env_dev"
+    config_path = "./config.yaml"
+    config = load_config(config_path)
+    print(config)
+    
     # Log Line for program staring
     now = datetime.now()
     dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-    print(f"\n\n\nStarting Program ({VERSION}): {dt_string})")
+    print(f"\n\n\nStarting Program ({config['version']}): {dt_string}")
 
     font_counter = 0
     # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
     # ./musicroot will be used on 'Windows' for development.  
     # /music/ will be the Docker volume used on the server
-    music_roots = ['/music/', '../media/musicroot/']
-    download_paths = ['/downloads/', '../media/downloads/']
-    music_root = get_path(music_roots)
-    source_directory = get_path(download_paths)
+    
+    
+    #music_roots = ['/music/', './media/musicroot/']
+    #download_paths = ['/downloads/', './media/downloads/']
+
+    music_root = config[config['enviornment']]['music_root']
+    source_directory = config[config['enviornment']]['download_directory']
     if not music_root or not source_directory:
         print(f"No music root/download directory found.  Please check the paths and try again. mr={music_root}, source={source_directory}")
         exit()
@@ -202,13 +252,13 @@ if __name__ == "__main__":
         print(f"Music root directory = {music_root}")
         print(f"Downloads directory = {source_directory}")
 
-    # Check to make sure a CSV file is available.  The Excel macro should create CSV files in the "Windows" folder as well as the Unraid folder
-    if os.path.exists(IMPORT_CSV):
-        clips = import_csv(IMPORT_CSV)
-    else:
-        print("No CSV file found.  Please check the path and try again.")
-        exit()
     
+
+    track_info_list = load_data(config['import_csv'])
+    tracks = []
+    for track_info in track_info_list:
+        tracks.append(Track(track_info))
+
     # setup connection to plex
     plex = connect_to_server()
 
@@ -218,39 +268,39 @@ if __name__ == "__main__":
     new_albums = []
     moods = []
     # Loop through each clip in the CSV
-    for clip in clips:
+    for track in tracks:
 
-        base_name = clip['WholeName'] # NPdKxsSE5JQ
-        artist = clip['ArtistName'] # Harry Mack
-        album = clip['AlbumName'] # Omegle Bars 1
-        track_number = clip['TrackNumber'] # 1
-        track_title = clip['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-        filename = track_number + " - " + track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-        start_time = clip['StartTime']
-        end_time = clip['EndTime']
-        url = clip['URL']
-        beatname = clip['BeatName']
-        producer = clip['Producer']
+        #base_name = clip['WholeName'] # NPdKxsSE5JQ
+        #artist = clip['ArtistName'] # Harry Mack
+        #album = clip['AlbumName'] # Omegle Bars 1
+        #track_number = clip['TrackNumber'] # 1
+        #track_title = clip['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        #filename = track_number + " - " + track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
+        #start_time = clip['StartTime']
+        #end_time = clip['EndTime']
+        #url = clip['URL']
+        #beatname = clip['BeatName']
+        #producer = clip['Producer']
         
         album_image = ""
-        destination_directory = music_root + album + '/' # /music/
-        source_file = source_directory + base_name + '.' + EXTENSION # ./downloads/NPdKxsSE5JQ (20200826).mp3
-        new_file = destination_directory + filename
+        destination_directory = music_root + track.album + '/' # /music/
+        source_file = source_directory + track.source_video_name + '.mp3' # ./downloads/NPdKxsSE5JQ (20200826).mp3
+        new_file = destination_directory + track.filename
         if os.path.exists(new_file):
             #print(f"File {new_file} already exists. Skipping")
             continue
 
 
-        if album != previous_album:
+        if track.album != previous_album:
             # This clip is part of a different album than the previous.  
             # if there was a previous album should i delete it?  probably not.  should wait until the end and delete everthing in the downloads folder
             # should i check for files in downloads folder on start?  give warning?
             # Create the folder /musicroot/album
             # Take the album image and resize it to 1280x1280.  Make a copy called 'album.jpg'.  move to /musicroot/album folder
             new_album = True
-            previous_album = album
+            previous_album = track.album
             create_album_folder(destination_directory)
-            new_albums.append(album)
+            new_albums.append(track.album)
         else:
             new_album = False
 
@@ -258,7 +308,7 @@ if __name__ == "__main__":
         #   the mp3 file, the description file, and the image file
         #   once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
         
-        downloaded = youtube_download(url, source_file)
+        downloaded = youtube_download(track.url, source_file)
         downloaded = True
         if not downloaded:
             print("Error downloading clip. Quitting")
@@ -267,7 +317,7 @@ if __name__ == "__main__":
         # This function takes the source (downloads) directory and base filename
         # It will extract the year from the upload date, rename the files with the date removed and assign the files
         # to the music, audio, and description items in the files dictionary 
-        downloaded_files, year = parse_files(source_directory, base_name)
+        downloaded_files, year = parse_files(source_directory, track.source_video_name)
         
         if downloaded_files['image']:
             if downloaded_files['image'][-4:] == 'webp': #convert webp to jpg file
@@ -284,12 +334,12 @@ if __name__ == "__main__":
             image_dimensions = (1280, 1280)
             text_area_dimensions = (1280, 120)
             text_area = TextArea(text_area_dimensions, image_dimensions, anchor_location)
-            if clip['Title'][0:2] == "OB":
+            if track.track_title[0:2] == "OB":
                 im = prepare_image(downloaded_files['image'], text_area, 1280, 1280, True)
             else:
                 im = prepare_image(downloaded_files['image'], text_area, 1280, 1280, False)
             draw = ImageDraw.Draw(im)
-            word_strings = clip['Words'].split(",")
+            word_strings = track.words.split(",")
             if FONT_SAMPLE:
                 fonts = get_fonts('./fonts/')
                 font_name = './fonts/' + fonts[font_counter]
@@ -309,8 +359,8 @@ if __name__ == "__main__":
                     #draw.rectangle(wr, fill=(0,0,255), outline=(0,0,255), width=2)
                     #draw.rectangle(mwr, fill=(0,255,255), outline=(0,255,255), width=2)
                 wg.draw_words(draw)
-                im.save('.media/working/' + clip['Title'] + '.jpg')
-                downloaded_files['image'] = './working/' + clip['Title'] + '.jpg'
+                im.save('./media/working/' + clip['Title'] + '.jpg')
+                downloaded_files['image'] = './media/working/' + clip['Title'] + '.jpg'
             else:
                 print("Error creating WordGrid.  Check the words and try again")
                 exit()
@@ -321,13 +371,13 @@ if __name__ == "__main__":
             print("Image not returned. Quitting")
             exit()
 
-        extract_audio(downloaded_files['audio'], new_file, start_time, end_time)
-        update_id3(new_file, artist, album, track_title, track_number, year, downloaded_files['image'])
+        extract_audio(downloaded_files['audio'], new_file, track.start_time, track.end_time)
+        update_id3(new_file, track.artist, album, track.track_title, track.track_number, year, downloaded_files['image'])
         
         # need to add the moods after the plex library has been updated.  instead of updating the library for every track,
         # just add it to a list.  once the library is updated (maybe sleep to allow it to finish?), loop through this list and addMood that way
-        if producer:
-            moods.append((track_title, producer))
+        if track.producer:
+            moods.append((track.track_title, track.producer))
         
     print("Updating Plex")
 
@@ -336,7 +386,7 @@ if __name__ == "__main__":
     if new_albums:
         print(f"The following albums were created:  {new_albums}")
 
-    print(f"Finished processing {len(clips)} tracks.")
+    print(f"Finished processing {len(tracks)} tracks.")
     for title, producer in moods:
         add_mood(plex, "Harry Mack", title, producer)
     

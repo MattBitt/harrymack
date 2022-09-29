@@ -1,0 +1,22 @@
+app_name: "harrymack"
+log_level: !ENV ${LOGLEVEL}
+import_csv: "./HarryMackClips.csv"
+version: "v1.3.0"
+enviornment: !ENV ${ENVIORNMENT}
+
+env_prod:
+    music_root: '/music/'
+    download_directory: '/downloads/'
+
+env_dev:
+    music_root: './media/musicroot/'
+    download_directory: './media/downloads/'
+fonts:
+  font_sample: False  # if true, program will use a different font for each image.  will also put image name in middle of the picture
+  font_name: "./media/fonts/courbd.ttf" # if FONT_SAMPLE is False, then this will be the font used.  "courbd.ttf" = Courier Bold
+  init_font_size: 48
+  max_font_size: 48
+
+plex:
+    baseurl: "http://192.168.0.202:32400" #the local address of your server
+    token: "ao7MsVLaXxRWLtCoyXWm"
