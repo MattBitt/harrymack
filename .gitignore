@@ -16,6 +16,5 @@ media/fonts/cour.ttf
 media/fonts/courbd.ttf
 media/fonts/courbi.ttf
 media/fonts/couri.ttf
-./.env
-
-./logs/*
+.env
+logs/
