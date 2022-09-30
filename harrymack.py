@@ -9,22 +9,53 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import glob
+import sys
+from loguru import logger
 from pyaml_env import parse_config
-
-
 
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
+#### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
+
+
+
+
 
 class EmptyListError(ValueError):
     """
     Raised to signal the fact that a list is empty.
     """
 
-#### Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
+
+class Source:
+    def __init__(self, base_name, path):
+        self.base_name = base_name
+        self.path = path
+        
+
+    def get_full_path(self):
+        pattern = f"{self.base_name}*.mp3"
+        file_list = glob.glob(self.path + pattern)
+        if len(file_list) == 0:
+            return None
+        if len(file_list) > 1:
+            logger.debug("Too many results returned for query {}.  results = {}", pattern, file_list)
+            return None
+        return file_list[0]
+
+    def exists(self):
+        if not self.get_full_path():
+            logger.debug("{} Does not exist", self.path + self.base_name)
+            return False
+        else:
+            return True
+
 class Track:
-    def __init__(self, source_info):
-        self.source_video_name = source_info['WholeName'] # NPdKxsSE5JQ
+    def __init__(self, source_info, config):
+        #self.source_video_name = source_info['WholeName'] # NPdKxsSE5JQ
+        #self.source_path = config[config['enviornment']]['download_directory']
+        #self.source_full_path = self.get_source_full_path()
+        self.source = Source(source_info['WholeName'], config[config['enviornment']]['download_directory'])
         self.artist = source_info['ArtistName'] # Harry Mack
         self.album = source_info['AlbumName'] # Omegle Bars 1
         self.track_number = source_info['TrackNumber'] # 1
@@ -36,21 +67,36 @@ class Track:
         self.beatname = source_info['BeatName']
         self.producer = source_info['Producer']
         self.words = source_info['Words']
+        self.destination_path = os.path.join(config[config['enviornment']]['music_root'], self.album)
+        self.destination_full_path = os.path.join(self.destination_path, self.filename) # ./media/musicroot/Omegle Bars 1/OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons.mp3
 
-def load_data(source):
-    try:
-        track_info_list = import_from_csv(source)
-    except FileNotFoundError:
-        print("No CSV file found.  Please check the path and try again.")
-        exit()
-    except IndexError:
-        print("No records found in CSV file.  Please check the import and retry.")
-        exit()
-    except KeyError:
-        print("There is a problem with the CSV file.")
-        exit()
+
     
-    return track_info_list
+    def destination_exists(self):
+        logger.debug(self.destination_full_path)
+        return os.path.exists(self.destination_full_path)
+    
+
+
+
+def load_track_data(path):
+    try:
+        track_info_list = import_from_csv(path)
+
+    except FileNotFoundError:
+        logger.error("No CSV file found.  Please check the path and try again. path={}", path)
+        raise
+    except EmptyListError:
+        logger.error("No records found in CSV file.  Please check the import and retry. path={}", path)
+        raise
+    except KeyError:
+        logger.error("There is a problem with the CSV file.  path={}", path)
+        raise
+    
+    tracks = []
+    for track_info in track_info_list:
+        tracks.append(Track(track_info, config))
+    return tracks
 
 def import_from_csv(csv_name):
     if not os.path.exists(csv_name):
@@ -67,33 +113,103 @@ def import_from_csv(csv_name):
     fields = ['WholeName', 'ArtistName', 'AlbumName', 'TrackNumber', 'Title', 'StartTime', 'EndTime', 'URL', 'BeatName', 'Producer' ]
     for f in fields:
         if not f in track_info[0].keys():
+            logger.error("{} does not exist in csv.  Please export and try again.", f)
             raise KeyError(f"{f} does not exist in csv.  Please export and try again.")
     return track_info
 
 def load_config(config_path):
-    return parse_config(config_path)
+    #need to validate the settings here?
+    # need to check paths as well
+    if not os.path.exists(config_path):
+        # what to do if the config file doesn't exist?
+        pass
+    config = parse_config(config_path)
+    music_root = config[config['enviornment']]['music_root']
+    source_directory = config[config['enviornment']]['download_directory']
+    err_mess = ""
+    if not music_root or not os.path.exists(music_root):
+        err_mess = f"No music root directory found.  Please check the paths and try again. mr={music_root}"
+    elif not source_directory or not os.path.exists(source_directory):
+        err_mess = f"No source directory found.  Please check the paths and try again. sd={source_directory}"
+   
+    if err_mess:
+        logger.error(err_mess)
+        raise KeyError(err_mess)
+    
+    return config
 
-def youtube_download(url, filename):
+def setup_logging():
+    logger.remove(0)
+    # adds logging to stderr
+    log_format = (
+        "{time: YYYY-MM-DD HH:mm:ss.SSS} | "
+        "<lvl>[{level: <8}]"
+        "</lvl><yellow>{name}:{function}:{line}</yellow> - "
+        "<lvl>{message}</lvl>"
+    )
+    logger.add(sys.stderr, format=log_format, level=config['log_level'], colorize=True)
+    # don't log to file on production.  run in docker so it should handle the log cleanup
+    if config['log_level'] == "DEBUG" and not config['enviornment'] == 'env_prod':
+        log_path = './logs/'
+        log_file = 'harrymack.log'
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+        logger.add(os.path.join(log_path, log_file), backtrace=True, diagnose=True)
+    return logger
+
+def process_with_ffmpeg(track, overwrite=False):
+    if track.destination_exists() and not overwrite:
+        # destination path exists and we don't want to overwrite
+        logger.debug("File exists.  OVERWRITE=False.  Skipping processing.")
+        return False
+    elif track.destination_exists() and overwrite:
+        # destination path exists but we do want to overwrite
+        logger.debug("File exists.  OVERWRITE=True.  Need to process.")
+        return True
+    else:
+        logger.debug("File does not exist.  Need to process.")
+        return True
+
+def download_source_file(track, overwrite=False):
+    if track.source.exists() and not overwrite:
+        # destination path exists and we don't want to overwrite
+        logger.debug("File exists.  OVERWRITE=False.  Skipping download.")
+        return False
+    elif track.source.exists() and overwrite:
+        # destination path exists but we do want to overwrite
+        logger.debug("File exists.  OVERWRITE=True.  Need to download.")
+        return True
+    else:
+        logger.debug("File does not exist.  Need to download.")
+        return True
+
+
+def youtube_download(track, config):
     # output name should not have ".ext"
-    filename = filename[:-4]
-    if not(os.path.exists(filename)):
-        yt_dl = subprocess.run(["yt-dlp", 
-            '--no-warnings',
-            '--quiet', 
-            '--extract-audio', 
+    f = os.path.join(track.source.path, track.source.base_name + ".mp3")
+    args1 = ["yt-dlp"]
+    args2 = []
+    if not config['log_level'] == 'DEBUG':
+        args2 = ['--no-warnings', '--quiet']
+    args3 = ['--extract-audio', 
             '--write-description',
             '--audio-format',
             'mp3',
             '--audio-quality',
             '0',
             "-o", 
-            filename + " (%(upload_date)s).mp3",
+            f[:-4] + " (%(upload_date)s).mp3",
             "--write-thumbnail", 
-            url])
-        if yt_dl.returncode:
-            print("There was an error processing %d" % yt_dl.returncode )
-            return False
-    return True
+            track.url]
+    logger.info("Starting download of {}", track.url)
+    yt_dl = subprocess.run(args1 + args2 + args3)
+    if yt_dl.returncode:
+        logger.error("There was an error processing {}", yt_dl.returncode )
+        return False
+    else:
+        
+        logger.success("The file was successfully downloaded:  {}", track.url)
+        return True
 
 
 
@@ -222,46 +338,31 @@ def get_path(path_list):
     print(f"No paths found {path_list}")
     return False
 
+
+
+
+
+
+
+
 if __name__ == "__main__":
+    VERSION = "1.4.0"
+    CONFIG_PATH = "./config.yaml"
+    config = load_config(CONFIG_PATH)
+    logger = setup_logging()
+    logger.success("Starting Program ({})", VERSION)
 
-    #os.environ['ENVIORNMENT'] = "env_dev"
-    config_path = "./config.yaml"
-    config = load_config(config_path)
-    print(config)
-    
-    # Log Line for program staring
-    now = datetime.now()
-    dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-    print(f"\n\n\nStarting Program ({config['version']}): {dt_string}")
-
-    font_counter = 0
-    # This will set the final destination for the audio files.  Separated due to developing on windows vs production on unraid
-    # ./musicroot will be used on 'Windows' for development.  
-    # /music/ will be the Docker volume used on the server
-    
-    
-    #music_roots = ['/music/', './media/musicroot/']
-    #download_paths = ['/downloads/', './media/downloads/']
-
-    music_root = config[config['enviornment']]['music_root']
-    source_directory = config[config['enviornment']]['download_directory']
-    if not music_root or not source_directory:
-        print(f"No music root/download directory found.  Please check the paths and try again. mr={music_root}, source={source_directory}")
-        exit()
+    tracks = load_track_data(config['import_csv'])
+    if not tracks:
+        logger.error("No Track objects were created {}", tracks)
     else:
-        print(f"Music root directory = {music_root}")
-        print(f"Downloads directory = {source_directory}")
-
-    
-
-    track_info_list = load_data(config['import_csv'])
-    tracks = []
-    for track_info in track_info_list:
-        tracks.append(Track(track_info))
+        logger.debug("Music root directory = {}", tracks[0].destination_path)
+        logger.debug("Downloads directory = {}", tracks[0].source.get_full_path())
 
     # setup connection to plex
     plex = connect_to_server()
-
+    #font_counter = 0
+    
     album = None
     previous_album = None
     new_album = False
@@ -269,28 +370,22 @@ if __name__ == "__main__":
     moods = []
     # Loop through each clip in the CSV
     for track in tracks:
-
-        #base_name = clip['WholeName'] # NPdKxsSE5JQ
-        #artist = clip['ArtistName'] # Harry Mack
-        #album = clip['AlbumName'] # Omegle Bars 1
-        #track_number = clip['TrackNumber'] # 1
-        #track_title = clip['Title'] # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-        #filename = track_number + " - " + track_title + '.mp3' # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-        #start_time = clip['StartTime']
-        #end_time = clip['EndTime']
-        #url = clip['URL']
-        #beatname = clip['BeatName']
-        #producer = clip['Producer']
-        
         album_image = ""
-        destination_directory = music_root + track.album + '/' # /music/
-        source_file = source_directory + track.source_video_name + '.mp3' # ./downloads/NPdKxsSE5JQ (20200826).mp3
-        new_file = destination_directory + track.filename
-        if os.path.exists(new_file):
-            #print(f"File {new_file} already exists. Skipping")
-            continue
+
+        # these functions return booleans depending on what needs to be done (download, audio processing)
+        download_file = download_source_file(track, config['overwrite_download'])
+        ffmpeg_process = process_with_ffmpeg(track, config['overwrite_destination'])
+
+        if download_file:
+            downloaded = youtube_download(track, config)
+            if not downloaded:
+                logger.error("Error downloading clip {}. Skipping to next track", track.url)
+                continue
 
 
+        if ffmpeg_process:
+            pass
+        exit()
         if track.album != previous_album:
             # This clip is part of a different album than the previous.  
             # if there was a previous album should i delete it?  probably not.  should wait until the end and delete everthing in the downloads folder
@@ -299,7 +394,7 @@ if __name__ == "__main__":
             # Take the album image and resize it to 1280x1280.  Make a copy called 'album.jpg'.  move to /musicroot/album folder
             new_album = True
             previous_album = track.album
-            create_album_folder(destination_directory)
+            create_album_folder(track.destination_directory)
             new_albums.append(track.album)
         else:
             new_album = False
@@ -308,11 +403,7 @@ if __name__ == "__main__":
         #   the mp3 file, the description file, and the image file
         #   once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
         
-        downloaded = youtube_download(track.url, source_file)
-        downloaded = True
-        if not downloaded:
-            print("Error downloading clip. Quitting")
-            exit()
+
         
         # This function takes the source (downloads) directory and base filename
         # It will extract the year from the upload date, rename the files with the date removed and assign the files
@@ -340,7 +431,7 @@ if __name__ == "__main__":
                 im = prepare_image(downloaded_files['image'], text_area, 1280, 1280, False)
             draw = ImageDraw.Draw(im)
             word_strings = track.words.split(",")
-            if FONT_SAMPLE:
+            if config['font_sample']:
                 fonts = get_fonts('./fonts/')
                 font_name = './fonts/' + fonts[font_counter]
                 font_counter = font_counter + 1
@@ -348,7 +439,7 @@ if __name__ == "__main__":
                 draw.rectangle([(50,50), (1230,300)], fill=(0,0,0))
                 draw.text((100,100), font_name, font=f, fill=(0,255,0))
             else:
-                font_name = FONT_NAME
+                font_name = config['font_name']
             wg = WordGrid(text_area, word_strings, font_name)
 
             if wg:
@@ -359,8 +450,8 @@ if __name__ == "__main__":
                     #draw.rectangle(wr, fill=(0,0,255), outline=(0,0,255), width=2)
                     #draw.rectangle(mwr, fill=(0,255,255), outline=(0,255,255), width=2)
                 wg.draw_words(draw)
-                im.save('./media/working/' + clip['Title'] + '.jpg')
-                downloaded_files['image'] = './media/working/' + clip['Title'] + '.jpg'
+                im.save('./media/working/' + track.title + '.jpg')
+                downloaded_files['image'] = './media/working/' + track.title + '.jpg'
             else:
                 print("Error creating WordGrid.  Check the words and try again")
                 exit()
