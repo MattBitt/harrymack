@@ -12,6 +12,9 @@ import glob
 import sys
 from loguru import logger
 from pyaml_env import parse_config
+from pathlib import Path
+import yaml
+
 
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
@@ -117,12 +120,24 @@ def import_from_csv(csv_name):
             raise KeyError(f"{f} does not exist in csv.  Please export and try again.")
     return track_info
 
+def get_default_config_path(config_path):
+    p = Path(config_path)
+    return "{0}-default{1}".format(Path.joinpath(p.parent, p.stem), p.suffix)
+
 def load_config(config_path):
     #need to validate the settings here?
     # need to check paths as well
     if not os.path.exists(config_path):
         # what to do if the config file doesn't exist?
-        pass
+        logger.info('Config file {} does not exist.  Checking for default config', config_path)
+        default_config_path = get_default_config_path(config_path)
+        if not os.path.exists(default_config_path):
+            logger.warning("No default config ({}) file found.  Creating new file.", default_config_path)
+            # create config-default.yaml from dictionary
+            create_yaml_from_dict(default_config(), default_config_path)
+            remove_single_quotes(default_config_path)
+        copy_file(default_config_path, config_path, overwrite=False)
+   
     config = parse_config(config_path)
     music_root = config[config['enviornment']]['music_root']
     source_directory = config[config['enviornment']]['download_directory']
@@ -137,6 +152,34 @@ def load_config(config_path):
         raise KeyError(err_mess)
     
     return config
+
+def default_config():
+    return {
+        'app_name': 'harrymack',
+        'enviornment': '!ENV ${ENVIORNMENT}',
+        'import_csv': './HarryMackClips.csv',
+        'log_level': '!ENV ${LOGLEVEL}',
+        'overwrite_destination': False,
+        'overwrite_download': False,
+        'env_dev': {
+            'download_directory': './media/downloads/',
+            'music_root': './media/musicroot/'
+        },
+        'env_prod': {
+            'download_directory': '/downloads/', 
+            'music_root': '/music/'
+        },
+        'fonts': {
+            'font_name': './media/fonts/courbd.ttf',
+            'font_sample': False,
+            'init_font_size': 48,
+            'max_font_size': 48
+        },
+        'plex': {
+            'baseurl': '!ENV ${PLEXURL}', 
+            'token': '!ENV ${PLEX}'
+        }
+    }
 
 def setup_logging():
     logger.remove(0)
@@ -183,6 +226,17 @@ def download_source_file(track, overwrite=False):
         logger.debug("File does not exist.  Need to download.")
         return True
 
+def create_yaml_from_dict(default_config, config_path):
+    with open(config_path, 'w') as f:
+        yaml.dump(default_config, f, default_flow_style=False, sort_keys=False)
+
+def remove_single_quotes(config_path):
+    with open(config_path, 'r') as f:
+        data = f.read()
+        data = data.replace("'", "")
+    with open(config_path, 'w') as f:
+        f.write(data)
+
 
 def youtube_download(track, config):
     # output name should not have ".ext"
@@ -211,7 +265,7 @@ def youtube_download(track, config):
         logger.success("The file was successfully downloaded:  {}", track.url)
         return True
 
-
+  
 
 def extract_audio(source, destination, start_time, end_time):
     if not os.path.exists(destination):
@@ -263,7 +317,7 @@ def move_file(source, destination, overwrite):
     shutil.move(source, destination)
     return True
 
-def copy_file(source, destination, overwrite):
+def copy_file(source, destination, overwrite=False):
     if os.path.exists(destination):
         if overwrite:
             os.remove(destination)
@@ -348,6 +402,7 @@ def get_path(path_list):
 if __name__ == "__main__":
     VERSION = "1.4.0"
     CONFIG_PATH = "./config.yaml"
+
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)

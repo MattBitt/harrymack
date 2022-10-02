@@ -24,6 +24,8 @@ def track_info():
     }
     return track_info
 
+
+
 @pytest.fixture
 def track_object(track_info):
     '''Returns a Track instance with Omegle Bars 1.1 Info'''
@@ -36,6 +38,16 @@ def caplog(caplog: LogCaptureFixture):
     handler_id = logger.add(caplog.handler, format="{message}")
     yield caplog
     logger.remove(handler_id)
+
+@pytest.fixture
+def config_paths():
+    return ('./config.yaml', './config-default.yaml')
+
+@pytest.fixture
+def default_config_data():
+    return harrymack.default_config()
+
+
 
 
 def test_import_file_exists():
@@ -58,8 +70,8 @@ def test_import_file_malformed(caplog):
         harrymack.load_track_data("./tests/HarryMackTestMalformed.csv")
     assert "does not exist" in caplog.text
 
-def test_create_tracks(track_info):
-    config = harrymack.load_config('./config.yaml')
+def test_create_tracks(track_info, config_paths):
+    config = harrymack.load_config(config_paths[0])
     track = harrymack.Track(track_info, config)
     assert track.source.base_name == "NPdKxsSE5JQ"
     assert track.source.get_full_path() == os.path.join(config[config['enviornment']]['download_directory'], track.source.base_name + ' (20200826).mp3')
@@ -143,6 +155,16 @@ def test_download_source_source_does_not_exist(track_object):
     #assert "Error:" in caplog.text
 #def test_correct_config_file_load():
 #    assert 1 == 2
+
+
+def test_create_config_from_dict(tmp_path, default_config_data, config_paths):
+    tmp_config_path = Path.joinpath(tmp_path, config_paths[0])
+    harrymack.create_yaml_from_dict(default_config_data, tmp_config_path)
+    with open(tmp_config_path, 'r') as f:
+        lines = f.readlines()
+        assert 'app_name: harrymack' in lines[0]
+
+
 
 #def test_config_file_create():
 #    assert 1 == 2
