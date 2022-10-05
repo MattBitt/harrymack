@@ -18,3 +18,4 @@ fonts:
 plex:
   baseurl: !ENV ${PLEXURL}
   token: !ENV ${PLEX}
+another_key: hello

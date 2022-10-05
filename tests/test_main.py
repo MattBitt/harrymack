@@ -20,16 +20,15 @@ def track_info():
         'URL': "https://www.youtube.com/watch?v=NPdKxsSE5JQ",
         'BeatName': "Test Beatname",
         'Producer': "Homage",
-        'Words' : "Florescent Adolescence, Rainbow, Wetherspoons"
+        'PrimaryWords' : "Florescent Adolescence, Rainbow, Wetherspoons"
     }
     return track_info
 
 
 
 @pytest.fixture
-def track_object(track_info):
+def track_object(track_info, config):
     '''Returns a Track instance with Omegle Bars 1.1 Info'''
-    config = harrymack.load_config('./config.yaml')
     track = harrymack.Track(track_info, config)
     return track
 
@@ -39,39 +38,62 @@ def caplog(caplog: LogCaptureFixture):
     yield caplog
     logger.remove(handler_id)
 
-@pytest.fixture
-def config_paths():
-    return ('./config.yaml', './config-default.yaml')
 
 @pytest.fixture
 def default_config_data():
     return harrymack.default_config()
 
+@pytest.fixture
+def config(tmp_path, default_config_data):
+    tmp_config_path = Path.joinpath(tmp_path, 'test-config.yaml')
+    harrymack.create_yaml_from_dict(default_config_data, tmp_config_path)
+    return harrymack.load_config(tmp_config_path)
 
+@pytest.fixture
+def correct_csv(tmp_path):
+    source_csv = './HarryMackClips.csv'
+    target_csv = 'HarryMackClipsCorrect.csv'
+    n = 10 # * number of records to keep
+    if os.path.exists(source_csv):
+        correct_csv = Path.joinpath(tmp_path, target_csv)
+        harrymack.copy_file(source_csv, correct_csv, overwrite=True)
+        correct_csv = harrymack.keep_n_lines_of_file(n, correct_csv)
+        return correct_csv
+    else:
+        # * Have to have CSV available to run this test
+        return None
+    
+@pytest.fixture
+def empty_csv(correct_csv):
+        empty_csv = harrymack.keep_n_lines_of_file(0, correct_csv)
+        return empty_csv
 
+@pytest.fixture
+def malformed_csv(correct_csv, tmp_path):
+        malformed_csv = harrymack.remove_random_column_from_csv(correct_csv, tmp_path)
+        return malformed_csv
 
-def test_import_file_exists():
-    tracks = harrymack.import_from_csv("./tests/HarryMackTest.csv")
+def test_import_track_data_file_exists(correct_csv):
+    tracks = harrymack.import_from_csv(correct_csv)
     assert type(tracks) is list
     assert len(tracks) == 10
 
-def test_import_file_does_not_exist(caplog):
+def test_import_track_data_file_does_not_exist(caplog):
     with pytest.raises(FileNotFoundError, match="^File*"):
         harrymack.load_track_data("./tests/does not exist.csv")
     assert "No CSV file" in caplog.text
 
-def test_import_file_empty(caplog):
+def test_import_track_data_file_empty(empty_csv, caplog):
     with pytest.raises(harrymack.EmptyListError, match="^File*"):
-        harrymack.load_track_data("./tests/HarryMackTestEmpty.csv")
+        harrymack.load_track_data(empty_csv)
     assert "No records found in CSV file" in caplog.text
 
-def test_import_file_malformed(caplog):
+def test_import_track_data_file_malformed(malformed_csv, caplog):
     with pytest.raises(KeyError, match=".+does not exist.+"):
-        harrymack.load_track_data("./tests/HarryMackTestMalformed.csv")
+        harrymack.load_track_data(malformed_csv)
     assert "does not exist" in caplog.text
 
-def test_create_tracks(track_info, config_paths):
-    config = harrymack.load_config(config_paths[0])
+def test_create_tracks(track_info, config):
     track = harrymack.Track(track_info, config)
     assert track.source.base_name == "NPdKxsSE5JQ"
     assert track.source.get_full_path() == os.path.join(config[config['enviornment']]['download_directory'], track.source.base_name + ' (20200826).mp3')
@@ -89,25 +111,20 @@ def test_create_tracks(track_info, config_paths):
     assert track.destination_full_path == os.path.join(track.destination_path, track.filename)
 
 
-
-
-
-
-def test_env_dev_variables():
-    # should be running as development profile.  
-    config = harrymack.load_config('./config.yaml')
+def test_env_dev_variables(config):
+    # * should be running as development profile.  
     env = config['enviornment']
     assert config[env]['music_root'] == "./media/musicroot/"
     
-def test_env_prod_variables(caplog):
+#def test_env_prod_variables(config, caplog):
     # since the tests are running on the dev server, the prod paths won't be valid    
-    orig_env = os.environ['ENVIORNMENT']
-    os.environ['ENVIORNMENT'] = "env_prod"
-    with pytest.raises(KeyError, match=".+directory found.+"):
-        harrymack.load_config('./config.yaml')
-    assert "directory found" in caplog.text
+#   orig_env = os.environ['ENVIORNMENT']
+#    os.environ['ENVIORNMENT'] = "env_prod"
+    #with pytest.raises(KeyError, match=".+directory found.+"):
+    #    harrymack.load_config('./config.yaml')
+    #assert "directory found" in caplog.text
     # return the enviornment to its original state
-    os.environ['ENVIORNMENT'] = orig_env
+#    os.environ['ENVIORNMENT'] = orig_env
 
 
 def test_process_with_ffmpeg_destination_exists_overwrite_false(track_object):
@@ -118,12 +135,14 @@ def test_process_with_ffmpeg_destination_exists_overwrite_true(track_object):
     process = harrymack.process_with_ffmpeg(track_object, True)
     assert process == True
 
+# TODO: Need to do a use tmp_path fixture for this 
 def test_process_with_ffmpeg_destination_does_not_exist(track_object):
-    # simulates the situation where the destination file does not exist
+    # * simulates the situation where the destination file does not exist
     track_object.destination_full_path = '/nonsense_directory/'
     process = harrymack.process_with_ffmpeg(track_object)
     assert process == True
-    
+
+# TODO: Need to do a use tmp_path fixture for this 
 def test_download_source_source_exists_overwrite_false(track_object):
     test_mp3 = './media/test/test.mp3'
     Path(test_mp3).touch()
@@ -134,6 +153,7 @@ def test_download_source_source_exists_overwrite_false(track_object):
     if os.path.exists(test_mp3):
         os.remove(test_mp3)
 
+# TODO: Need to do a use tmp_path fixture for this 
 def test_download_source_source_exists_overwrite_true(track_object):
     test_mp3 = './media/test/test.mp3'
     Path(test_mp3).touch()
@@ -144,8 +164,9 @@ def test_download_source_source_exists_overwrite_true(track_object):
     if os.path.exists(test_mp3):
         os.remove(test_mp3)
 
+# TODO: Need to do a use tmp_path fixture for this 
 def test_download_source_source_does_not_exist(track_object):
-    # simulates the situation where the destination file does not exist
+    # * simulates the situation where the destination file does not exist
     track_object.source.path = '/nonsense_directory/'
     download = harrymack.download_source_file(track_object)
     assert download == True
@@ -157,8 +178,8 @@ def test_download_source_source_does_not_exist(track_object):
 #    assert 1 == 2
 
 
-def test_create_config_from_dict(tmp_path, default_config_data, config_paths):
-    tmp_config_path = Path.joinpath(tmp_path, config_paths[0])
+def test_create_config_from_dict(tmp_path, default_config_data):
+    tmp_config_path = Path.joinpath(tmp_path, 'config.yaml')
     harrymack.create_yaml_from_dict(default_config_data, tmp_config_path)
     with open(tmp_config_path, 'r') as f:
         lines = f.readlines()

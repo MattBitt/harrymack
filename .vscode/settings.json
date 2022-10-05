@@ -7,6 +7,8 @@
         "--durations=5",
         "-v",
         "--random-order"
-    ]
+    ],
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true
 }
 
