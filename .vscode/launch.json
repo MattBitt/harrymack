@@ -9,9 +9,10 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/harrymack.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-
+            // "console": "integratedTerminal",
+            "justMyCode": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            "redirectOutput": true
         }
     ]
 }
