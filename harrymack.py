@@ -486,12 +486,6 @@ if __name__ == "__main__":
          """
         source = Source(dr, config)
         source.download_files()
-        if source.filenames["audio"] == "":
-            # * need to raise an error here.  no audio files were found after the download took place
-            logger.debug("No source audio found!")
-            raise FileNotFoundError
-        else:
-            logger.debug("Source audio file is {}", source.filenames["audio"])
 
         id3 = ID3(dr)
         track = Track(dr, config, source, id3)

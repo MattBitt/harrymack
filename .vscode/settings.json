@@ -13,5 +13,6 @@
     "python.linting.flake8Args": [
         "--max-line-length=180",
         "--ignore=E402,F841,F401,E302,E305,F811,E203",
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "basic"
 }

@@ -16,8 +16,14 @@ class Source:
         # need to download new file
         self.download_files()
         self.find_all_files()
+        if self.filenames["audio"] == "":
+            # * need to raise an error here.  no audio files were found after the download took place
+            logger.debug("No source audio found!")
+            raise FileNotFoundError
+        else:
+            logger.debug("Source audio file is {}", self.filenames["audio"])
 
-    def load_data(self, data_row, config):
+    def load_data(self, data_row, config) -> None:
         self.config = config
         self.video_type = data_row["ClipTypes"]
         self.url = data_row["URL"]
@@ -26,7 +32,7 @@ class Source:
         self.words = data_row["PrimaryWords"]
         self.episode_number = data_row["EpisodeNumber"]
         self.overwrite_download = config["overwrite_download"]
-        self.download_path = self.root_directory / self.id
+        self.file_base_path = self.root_directory / self.id
 
     def exists(self, filetype):
         """
@@ -53,7 +59,7 @@ class Source:
     #        file_dict = {k: v for k, v in filetypes}
     #        return file_dict
 
-    def download_files(self):
+    def download_files(self) -> bool:
 
         """
         build yt-dlp command
@@ -75,7 +81,7 @@ class Source:
             "--audio-quality",
             "0",
             "-o",
-            str(self.download_path) + " (%(upload_date)s).mp3",
+            str(self.file_base_path) + " (%(upload_date)s).mp3",
             "--write-thumbnail",
             self.url,
         ]
@@ -94,7 +100,10 @@ class Source:
         extensions["audio"] = ["*.mp3"]
         extensions["image"] = ["*.mp3.jpg", "*.mp3.webp"]
         extensions["description"] = ["*.mp3.description"]
+        self.filenames: dict[str, str]
         self.filenames = {"audio": "", "image": "", "description": ""}
+        k: str
+        ext: str
         for k, ext in extensions.items():
             for e in ext:
                 f = self.find_file(e)
@@ -102,13 +111,13 @@ class Source:
                     self.filenames[k] = f
                     continue
 
-    def find_file(self, pattern):
+    def find_file(self, pattern) -> Path | str | None:
         search_string = str(self.root_directory / (self.id + pattern))
         file_list = glob.glob(search_string)
         if len(file_list) == 1:
             return file_list[0]
         elif len(file_list) > 1:
-            logger.debug("Too many files found: %s", os.dir(self.path()))
+            logger.debug("Too many files found: %s", os.listdir(self.root_directory))
         else:
             # * if the directory doesn't exist, then its not downloaded.  no need to check further
             return ""
