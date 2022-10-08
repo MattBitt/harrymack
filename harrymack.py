@@ -18,7 +18,7 @@ import yaml
 import random
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
-from track import Source, Track, ID3
+from myclasses import Source, Track, ID3
 
 # TODO: Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
