@@ -12,11 +12,14 @@ class Source:
         self.load_data(data_row, config)
 
         logger.debug("Source created:  {}", self.id)
-        # if not self.exists() or (self.exists() and self.overwrite_download):
-        # need to download new file
-        self.download_files()
         self.find_all_files()
-        if self.filenames["audio"] == "":
+        if not self.exists("audio") or (
+            self.exists("audio") and self.overwrite_download
+        ):
+            # need to download new file
+            self.download_files()
+            self.find_all_files()
+        if not self.exists("audio"):
             # * need to raise an error here.  no audio files were found after the download took place
             logger.debug("No source audio found!")
             raise FileNotFoundError
@@ -29,15 +32,15 @@ class Source:
         self.url = data_row["URL"]
         self.root_directory = Path(config[config["enviornment"]]["download_directory"])
         self.id = data_row["WholeName"]
+        self.file_base_path = self.root_directory / self.id
         self.words = data_row["PrimaryWords"]
         self.episode_number = data_row["EpisodeNumber"]
         self.overwrite_download = config["overwrite_download"]
-        self.file_base_path = self.root_directory / self.id
 
-    def exists(self, filetype):
+    def exists(self, filetype: str) -> bool:
         """
         the download is considered to exist if the mp3 file is there.  this is the file that i name in the download command
-        need to check the directory for existence of the audio, image, and description files.  Since I wont know the name of the files after they are downloaded.add()
+        need to check the directory for existence of the audio, image, and description files.  Since I wont know the name of the files after they are downloaded
         The format will be self.id + (YYYYMMDD).
         construct the whole path (path + name + extension)
         list
@@ -98,7 +101,7 @@ class Source:
         # * these are the possible extensions to search for
         extensions = {}
         extensions["audio"] = ["*.mp3"]
-        extensions["image"] = ["*.mp3.jpg", "*.mp3.webp"]
+        extensions["image"] = ["*.mp3.jpg", "*.mp3.webp", "*.jpg"]
         extensions["description"] = ["*.mp3.description"]
         self.filenames: dict[str, str]
         self.filenames = {"audio": "", "image": "", "description": ""}
@@ -108,7 +111,7 @@ class Source:
             for e in ext:
                 f = self.find_file(e)
                 if not f == "":
-                    self.filenames[k] = f
+                    self.filenames[k] = str(f)
                     continue
 
     def find_file(self, pattern) -> Path | str | None:
@@ -150,7 +153,9 @@ class Track:
     def full_path(self):
         # * will return path /musicroot/album_folder/filename.mp3
         # * need to see if yt-dlp gives me names of downloaded files
-        return Path.joinpath(self.root_directory, self.id3.album_name, self.filename, self.extension)
+        return Path.joinpath(
+            self.root_directory, self.id3.album_name, self.filename, self.extension
+        )
 
     def extract_from_source(self):
         if self.source.split_by_times():

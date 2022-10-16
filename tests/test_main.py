@@ -4,6 +4,7 @@ from _pytest.logging import LogCaptureFixture
 import harrymack
 import os
 from pathlib import Path
+from myclasses import ID3, Source, Track
 
 def test_import_track_data_file_exists(correct_csv):
     tracks = harrymack.import_from_csv(correct_csv)
@@ -12,12 +13,12 @@ def test_import_track_data_file_exists(correct_csv):
 
 def test_import_track_data_file_does_not_exist(caplog, config):
     with pytest.raises(FileNotFoundError, match="^File*"):
-        harrymack.load_track_data("./tests/does not exist.csv", config)
+        harrymack.load_track_data("./tests/does not exist.csv")
     assert "No CSV file" in caplog.text
 
 def test_import_track_data_file_empty(empty_csv, caplog, config):
     with pytest.raises(harrymack.EmptyListError, match="^File*"):
-        harrymack.load_track_data(empty_csv, config)
+        harrymack.load_track_data(empty_csv)
     assert "No records found in CSV file" in caplog.text
 
 # ! This test randomly fails.  I belive it depends on what field is removed from the csv.  Do I even need to test this?
@@ -27,22 +28,22 @@ def test_import_track_data_file_empty(empty_csv, caplog, config):
 #        harrymack.load_track_data(malformed_csv, config)
 #    assert "does not exist" in caplog.text
 
-def test_create_tracks(data_row, config):
-    track = harrymack.Track(data_row, config)
-    assert track.source.base_name == "NPdKxsSE5JQ"
-    assert track.source.get_full_path() == os.path.join(config[config['enviornment']]['download_directory'], track.source.base_name + ' (20200826).mp3')
-    assert track.artist == "Harry Mack"
-    assert track.album == "Omegle Bars 1"
-    assert track.track_number == "1"
-    assert track.track_title == "OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons"
-    assert track.filename == "1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons.mp3"
-    assert track.start_time == "00:00:55"
-    assert track.end_time == "00:04:32"
-    assert track.url == "https://www.youtube.com/watch?v=NPdKxsSE5JQ"
-    assert track.beatname == "Test Beatname"
-    assert track.producer == "Homage"
-    assert track.destination_path == os.path.join(config[config['enviornment']]['music_root'], track.album)
-    assert track.destination_full_path == os.path.join(track.destination_path, track.filename)
+# def test_create_tracks(data_row, config, source_object, id3_object):
+#     track = Track(data_row, config, source_object, id3_object)
+#     assert track.source.base_name == "NPdKxsSE5JQ"
+#     assert track.source.get_full_path() == os.path.join(config[config['enviornment']]['download_directory'], track.source.base_name + ' (20200826).mp3')
+#     assert track.artist == "Harry Mack"
+#     assert track.album == "Omegle Bars 1"
+#     assert track.track_number == "1"
+#     assert track.track_title == "OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons"
+#     assert track.filename == "1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons.mp3"
+#     assert track.start_time == "00:00:55"
+#     assert track.end_time == "00:04:32"
+#     assert track.url == "https://www.youtube.com/watch?v=NPdKxsSE5JQ"
+#     assert track.beatname == "Test Beatname"
+#     assert track.producer == "Homage"
+#     assert track.destination_path == os.path.join(config[config['enviornment']]['music_root'], track.album)
+#     assert track.destination_full_path == os.path.join(track.destination_path, track.filename)
 
 
 def test_env_dev_variables(config):

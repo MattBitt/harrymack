@@ -2,7 +2,7 @@ import pytest
 from loguru import logger
 from _pytest.logging import LogCaptureFixture
 import harrymack
-import track
+from myclasses import ID3, Source, Track
 import os
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from pathlib import Path
 def data_row():
     """Returns track_info with Omegle Bars 1.1 info to create a Track instance"""
     data_row = {
-        "ClipType": "OmegleBarsClips",
+        "ClipTypes": "OmegleBarsClips",
         "EpisodeNumber": "1",
         "TrackNumber": "1",
         "StartTime": "00:00:55",
@@ -32,12 +32,12 @@ def data_row():
 @pytest.fixture
 def track_object(data_row, config, source_object, id3_object):
     """Returns a Track instance with Omegle Bars 1.1 Info"""
-    return harrymack.Track(data_row, config)
+    return Track(data_row, config, source_object, id3_object)
 
 
 @pytest.fixture
 def source_object(data_row, config):
-    return track.Source(data_row, config)
+    return Source(data_row, config)
 
 
 # * These fixtures create a temporary directory that contains empty audio, image, and description files
@@ -57,21 +57,21 @@ def downloaded_audio_file(source_object, download_path):
 
 @pytest.fixture
 def downloaded_image_file(source_object, download_path):
-    image_file = download_path / (source_object.id + ".description")
+    image_file = download_path / (source_object.id + ".jpg")
     image_file.touch()
     return image_file
 
 
 @pytest.fixture
 def downloaded_description_file(source_object, download_path):
-    description_file = download_path / (source_object.id + ".jpg")
+    description_file = download_path / (source_object.id + ".mp3.description")
     description_file.touch()
     return description_file
 
 
 @pytest.fixture
 def id3_object(data_row):
-    return track.ID3(data_row)
+    return ID3(data_row)
 
 
 @pytest.fixture
