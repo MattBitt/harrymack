@@ -51,6 +51,30 @@ def test_create_id3_object(data_row):
     assert isinstance(id3, ID3)
 
 
-def test_create_track_object(data_row, config, source_object, id3_object):
-    t = Track(data_row, config, source_object, id3_object)
+def test_create_track_object(data_row, config, source_object, id3):
+    t = Track(data_row, config, source_object, id3)
     assert isinstance(t, Track)
+
+
+def test_track_create_folder():
+    assert 1 == 2
+
+
+def test_track_load_data():
+    assert 1 == 2
+
+
+def test_track_exists():
+    assert 1 == 2
+
+
+def test_track_extract_from_source():
+    assert 1 == 2
+
+
+def test_track_write_id3_tags():
+    assert 1 == 2
+
+
+def test_track_add_source():
+    assert 1 == 2

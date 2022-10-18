@@ -4,7 +4,7 @@ import subprocess
 import csv
 import os
 import eyed3
-from eyed3.core import Date
+
 import shutil
 from PIL import Image
 from PIL import ImageDraw
@@ -176,18 +176,27 @@ def setup_logging():
     # adds logging to stderr
     log_format = (
         "<white>{time: YYYY-MM-DD HH:mm:ss.SSS} | </white>"
-        "<lvl>[{level: <9}]"
-        "</lvl><yellow>{name}:{function}:{line}</yellow> - "
+        "<lvl>[{level: <8}]"
+        "</lvl><yellow>{name}:<c>{extra[classname]}</c>:{function}:{line}</yellow> - "
         "<lvl>{message}</lvl>"
     )
+    logger.configure(extra={"classname": "None"})
     logger.add(sys.stderr, format=log_format, level=config["log_level"], colorize=True)
+
     # ! don't log to file on production.  run in docker so it should handle the log cleanup
     if config["log_level"] == "DEBUG" and not config["enviornment"] == "env_prod":
         log_path = "./logs/"
         log_file = "harrymack.log"
         if not os.path.exists(log_path):
             os.makedirs(log_path)
-        logger.add(os.path.join(log_path, log_file), backtrace=True, diagnose=True)
+        logger.add(
+            os.path.join(log_path, log_file),
+            format=log_format,
+            level=config["log_level"],
+            backtrace=True,
+            diagnose=True,
+        )
+
     return logger
 
 
@@ -496,11 +505,18 @@ if __name__ == "__main__":
         plex_update
          """
         source = Source(data_row, config)
-        # source.download_files()
+        if not source.exists(
+            "audio"
+        ):  # ? would i ever want to overwrite the downloads?
+            source.download_files()
 
         id3 = ID3(data_row)
         track = Track(data_row, config, source, id3)
-        exit()
+        # track.add_source(source)
+        if not track.exists() or (track.exists() and config["overwrite_destination"]):
+            track.extract_from_source()
+        track.write_id3_tags()
+
         # * these functions return booleans depending on what needs to be done (download, audio processing)
         # download_file = download_source_file(dr, config["overwrite_download"])
         # ffmpeg_process = process_with_ffmpeg(dr, config["overwrite_destination"])
