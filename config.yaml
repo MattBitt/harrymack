@@ -18,4 +18,100 @@ fonts:
 plex:
   baseurl: !ENV ${PLEXURL}
   token: !ENV ${PLEX}
-another_key: hello
+channels:
+  - channel_name: Harry Mack
+    url: https://www.youtube.com/c/HarryMack
+    use_playlists: true
+    auto_download: true
+    playlists:
+      - video_type: Wordplay Wednesday
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAGLnngi0ZOTvNmuNt5uHJk
+        split_by_silence: true
+        separate_album_per_episode: true
+        use_episode_number: true
+        video_exceptions:
+          - video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
+            episode_number: "065.5"
+          - video_title: The Last Wordplay Wednesday
+            episode_number: "069"
+          - video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
+            episode_number: "070"
+          - video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
+            episode_number: "071"
+        typical_video:
+          - episode_number_patterns:
+              - Wordplay Wednesday \#([0-9]+)
+              - Wordplay Wednesday Episode ([0-9]+)
+              - Wordplay Wednesday w/ Harry Mack.*([0-9]+)
+              - Wordplay Tuesday \#([0-9]+)
+      - video_type: Omegle Bars
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPALgw6Ko7H78WxHC3pzxeZl
+        split_by_silence: false
+        separate_album_per_episode: true
+        #use_episode_number: true
+        video_exceptions:
+          - video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
+            ignore: true
+          - video_title: The Lost Omegle Bars | Harry Mack
+            episode_number: ""
+            album_name: The Lost Omegle Bars
+          - video_title: Pianist & Freestyle Rapper BLOW MINDS on Omegle ft. Marcus Veltri
+            episode_number: "032"
+            album_name: Omegle Bars 032
+          - video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+            ignore: true
+        typical_video:
+          - episode_number_patterns:
+              - "Omegle Bars ([0-9]+)"
+              - "Omegle Bars Episode ([0-9]+)"
+              - "Omegle Bars Ep. ([0-9]+)"
+      - video_type: Guerrilla Bars
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPD7NJ92Jr8s8JFGdmOmMS95
+        split_by_silence: true
+        separate_album_per_episode: true
+        video_exceptions:
+          - video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1
+            ignore: true
+        typical_video:
+          - episode_number_patterns:
+              - "Guerrilla Bars ([0-9]+)"
+              - 'Guerrilla Bars \(Episode ([0-9]+)'
+              - "Guerrilla Bars Episode ([0-9]+)"
+              - "Best of Guerrilla Bars Part ([0-9]+)"
+      - video_type: OG Public Freestyles
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVZCuoMVAFys0mkVvvNawA
+        split_by_silence: false
+        separate_album_per_episode: false
+      - video_type: Busking With Bose
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
+        split_by_silence: false
+        separate_album_per_episode: true
+        typical_video:
+          - episode_number_patterns:
+              - Busking With Bose Ep. ([0-9]+)
+      - video_type: Behind the Bars
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPDVjUBHYPBOJYYC8sPhEILZ
+        split_by_silence: false
+        separate_album_per_episode: true
+        typical_video:
+          - episode_number_patterns:
+              - Behind The Bars ([0-9]+)
+
+  - channel_name: Harry Mack Clips
+    url: https://www.youtube.com/c/HarryMackClips
+    use_playlists: true # create source entries for every video.  how do i handle prefixes, album names?
+    auto_download: false # only download videos that have a track added that needs the source
+    playlists:
+      - video_type: Omegle Bars Unreleased
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zKL9Ty5HiX33-C8aAoYj6mB
+        split_by_silence: false
+        separate_album_per_episode: false
+
+# use this for individual videos not on a channel shown above
+videos:
+  - video_type: Misc
+    url: https://www.youtube.com/watch?v=73WCDV51bo0
+    split_by_silence: false
+  - video_type: "Omegle Bars 032.5"
+    url: https://www.youtube.com/watch?v=t_JrcAOfAp4
+    split_by_silence: false

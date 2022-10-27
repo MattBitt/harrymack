@@ -17,5 +17,10 @@
         "--max-line-length=180",
         "--ignore=E402,F841,F401,E302,E305,F811,E203,W503",
     ],
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "yaml.customTags": [
+        "!Scalar-example scalar",
+        "!Seq-example sequence",
+        "!Mapping-example mapping"
+    ]
 }

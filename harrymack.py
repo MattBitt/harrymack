@@ -19,7 +19,16 @@ import yaml
 import random
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
-from myclasses import Source, Track, ID3
+
+from source import Source, Sources
+from track import Track
+from album import Album
+from models import database_setup
+
+# from models import Source as SourceTbl
+from models import Track as TrackTbl
+from models import Source as SourceTbl
+
 
 # TODO: Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
@@ -34,35 +43,6 @@ class EmptyListError(ValueError):
     """
     Raised to signal the fact that a list is empty.
     """
-
-
-# class Track:
-#    def __init__(self, source_info, config):
-# self.source = Source(
-#    source_info["WholeName"],
-#    config[config["enviornment"]]["download_directory"],
-# )
-#        self.artist = source_info["ArtistName"]  # Harry Mack
-#        self.album = source_info["AlbumName"]  # Omegle Bars 1
-#        self.track_number = source_info["TrackNumber"]  # 1
-#        self.track_title = source_info["Title"]  # OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-#        self.filename = (
-#            self.track_number + " - " + self.track_title + ".mp3"
-#        )  # 1 - OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons
-#        self.start_time = source_info["StartTime"]
-#        self.end_time = source_info["EndTime"]
-#        self.url = source_info["URL"]
-#        self.beatname = source_info["BeatName"]
-#        self.producer = source_info["Producer"]
-#        self.words = source_info["PrimaryWords"]
-#        self.destination_path = os.path.join(config[config["enviornment"]]["music_root"], self.album)
-#        self.destination_full_path = os.path.join(
-#            self.destination_path, self.filename
-#        )  # ./media/musicroot/Omegle Bars 1/OB 1.1 Florescent Adolescence, Rainbow, Wetherspoons.mp3
-#
-#    def destination_exists(self):
-#        logger.debug(self.destination_full_path)
-#        return os.path.exists(self.destination_full_path)
 
 
 def load_track_data(path):
@@ -83,6 +63,15 @@ def load_track_data(path):
     except KeyError:
         logger.error("There is a problem with the CSV file.  path={}", path)
         raise
+    if not track_info_list:
+        logger.error("No data rows were read from {}", config["import_csv"])
+        exit(1)
+    logger.debug(
+        "Music root directory = {}", config[config["enviornment"]]["music_root"]
+    )
+    logger.debug(
+        "Downloads directory = {}", config[config["enviornment"]]["download_directory"]
+    )
     return track_info_list
 
 
@@ -180,6 +169,7 @@ def setup_logging():
         "</lvl><yellow>{name}:<c>{extra[classname]}</c>:{function}:{line}</yellow> - "
         "<lvl>{message}</lvl>"
     )
+    # TODO: Setup a separate logging format if not in debug.  get rid of classes and line numbers...
     logger.configure(extra={"classname": "None"})
     logger.add(sys.stderr, format=log_format, level=config["log_level"], colorize=True)
 
@@ -269,6 +259,32 @@ def remove_random_column_from_csv(csv_path, path):
                     del row[col_index]
                 writer.writerow(row)
     return Path.joinpath(path, "malformed.csv")
+
+
+def get_playlist_videos(url):
+    tmp_file = "playlist_videos.txt"
+    args1 = ["yt-dlp"]
+    args2 = []
+    if not config["log_level"] == "DEBUG":
+        args2 = ["--no-warnings", "--quiet"]
+    args3 = [
+        "--flat-playlist",
+        "-i",
+        "--print-to-file",
+        "url",
+        tmp_file,
+        url,
+    ]
+    yt_dl = subprocess.run(args1 + args2 + args3)
+    with open(tmp_file) as f:
+        lines = f.read().splitlines()
+    os.remove(tmp_file)
+    if yt_dl.returncode:
+        logger.error("There was an error processing {}", yt_dl.returncode)
+        return []
+    else:
+        logger.success("The file was successfully downloaded:  {}", url)
+        return lines
 
 
 def youtube_download(track, config):
@@ -454,6 +470,77 @@ def get_path(path_list):
     return False
 
 
+def import_sources_to_db(config):
+    for channel in config["channels"]:
+        if "playlists" in channel.keys():
+            for playlist in channel["playlists"]:
+                urls = get_playlist_videos(playlist["url"])
+                for url in urls:
+                    query = SourceTbl.select().where(SourceTbl.url == url)
+                    if not query.exists():
+                        logger.debug("Video doesn't exist in DB.  Need to create")
+                        try:
+                            source = Source(url, playlist, config)
+                        except FileNotFoundError:
+                            logger.warning("Not able to create object {}", url)
+                            continue
+                        source.save_to_db()
+                    else:
+                        logger.debug("Video {} already exits", url)
+    sources = Sources()
+    return sources.all()
+
+
+def import_tracks_to_db(config, sources):
+    data_rows = load_track_data(config["import_csv"])
+    album = None
+    previous_album = None
+    new_album = False
+    new_albums = []
+    moods = []
+    # * Loop through each clip in the CSV
+    for data_row in data_rows:
+        album_image = ""
+        # source = Source(data_row, config)
+        # if not source.exists(
+        #     "audio"
+        # ):  # ? would i ever want to overwrite the downloads?
+        #     source.download_files()
+        track = Track(data_row, config, source, id3)
+        # track.add_source(source)
+        if not track.exists() or (track.exists() and config["overwrite_destination"]):
+            track.extract_from_source()
+            track.write_id3_tags()
+
+
+def split_by_silence():
+    if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
+        orig_title = id3.title
+        orig_filename = data_row["Filename"] + " "
+        track_times = source.find_tracks()
+
+        for tt in track_times:
+            data_row["StartTime"], data_row["EndTime"] = tt
+            time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
+            id3.track_number = str((int(id3.track_number) + 1))
+            id3.title = orig_title + " " + id3.track_number
+
+            data_row["Filename"] = (
+                orig_filename + id3.track_number + " (" + time_string + ")"
+            )
+            track = Track(data_row, config, source, id3)
+            if not track.exists() or (
+                track.exists() and config["overwrite_destination"]
+            ):
+                track.extract_from_source()
+                track.write_id3_tags()
+
+
+# def get_episode_number(video_title: str, patterns: str) -> str:
+
+# use regex to determine if this file matches.  if it does return the episode number
+
+
 # ! THERE IS NO TRACK!.  There should be a source object that transforms into a destination object along side  an ID3 object as well.  Abstract out the Track to those two classes
 # ! that way, both the source and destination objects can use the ID3 object.
 # ? would this be the path or the actual file?  any use in capturing the actual file?
@@ -464,62 +551,44 @@ def get_path(path_list):
 if __name__ == "__main__":
     VERSION = "1.4.0"
     CONFIG_PATH = "./config.yaml"
+    # VIDEOS_TO_SPLIT_BY_SILENCE = ["WordplayWednesday"]
 
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)
 
-    data_rows = load_track_data(config["import_csv"])
-    if not data_rows:
-        logger.error("No data rows were read from {}", config["import_csv"])
-        exit(1)
-    logger.debug(
-        "Music root directory = {}", config[config["enviornment"]]["music_root"]
-    )
-    logger.debug(
-        "Downloads directory = {}", config[config["enviornment"]]["download_directory"]
-    )
-
     # *setup connection to plex
-    plex = connect_to_server()
+    # plex = connect_to_server()
     # font_counter = 0
 
-    album = None
-    previous_album = None
-    new_album = False
-    new_albums = []
-    moods = []
-    # * Loop through each clip in the CSV
-    for data_row in data_rows:
-        album_image = ""
+    # ! Try setting it up like this
+    # ! sources = import_sources_to_db() (should actually create album as well)
+    # ! tracks = import_tracks_to_db()
+    # ! albums = get_albums()
+    # ! for each album:
+    # !     album.create_tacks()
 
-        """ Final program should look something like this:
-        load_config
-        load_data
-        for each data in data:
-            source = Source
-            id3 = ID3
-            track = Track
-            track.create(from_source)
-            track.load_id3(id3)
-        plex_update
-         """
-        source = Source(data_row, config)
-        if not source.exists(
-            "audio"
-        ):  # ? would i ever want to overwrite the downloads?
-            source.download_files()
+    # ! album.create_tracks()
+    # !     if split_by_silence:
+    # !          do that
+    # !     else:
+    # !         tracks = select tracks where album = self
+    # !         for each track in tracks
+    # !             if track doesn't exist
+    # !                 track.create()
+    # !
+    # ! return list of tracks
+    # !
 
-        id3 = ID3(data_row)
-        track = Track(data_row, config, source, id3)
-        # track.add_source(source)
-        if not track.exists() or (track.exists() and config["overwrite_destination"]):
-            track.extract_from_source()
-        track.write_id3_tags()
+    # ****************************************************************************************
+    # Checking YouTube to get all of the videos added to the channel
+    database_setup()
+    sources = import_sources_to_db(config)
+    tracks = import_tracks_to_db(config, sources)
 
-        # * these functions return booleans depending on what needs to be done (download, audio processing)
-        # download_file = download_source_file(dr, config["overwrite_download"])
-        # ffmpeg_process = process_with_ffmpeg(dr, config["overwrite_destination"])
+    # * these functions return booleans depending on what needs to be done (download, audio processing)
+    # download_file = download_source_file(dr, config["overwrite_download"])
+    # ffmpeg_process = process_with_ffmpeg(dr, config["overwrite_destination"])
 
     #     if download_file:
     #         downloaded = youtube_download(dr, config)
