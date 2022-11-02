@@ -9,6 +9,7 @@ from peewee import (
     BooleanField,
     ForeignKeyField,
     AutoField,
+    ModelSelect,
 )
 from datetime import datetime
 
@@ -16,11 +17,24 @@ database = SqliteDatabase("harry_mack.db")
 
 
 class BaseModel(Model):
+    @classmethod
+    def all(cls):
+        result = cls.select()
+        return result
+
     class Meta:
         database = database
 
 
+# class Album(BaseModel):
+#     id = AutoField()
+#     album_name = CharField()
+#     album_artist = CharField()
+#     split_by_silence = BooleanField()
+
+
 class Source(BaseModel):
+    # album = ForeignKeyField(Album, backref="sources")
     album_name = CharField()
     audio_exists = BooleanField()
     audio_file = CharField()
@@ -37,35 +51,42 @@ class Source(BaseModel):
     youtube_id = CharField()
     video_type = CharField()
 
-
-class Album(BaseModel):
-    id = AutoField()
-    album_name = CharField()
-    album_artist = CharField()
+    @classmethod
+    def not_ignored(cls):
+        result = cls.select().where(cls.ignore.is_null(False))
+        return result
 
 
 class Track(BaseModel):
     artist_name = CharField()
+    album_name = CharField(null=True)
     exists = BooleanField()
     beat_name = CharField()
-    created_date = TimestampField()
+    created_date = DateField()
     end_time = TimeField()
-    filename = CharField()
-    id = AutoField()
+    file_path = CharField(null=True)
+    id = AutoField(primary_key=True)
     plex_id = CharField()
     plex_rating = IntegerField()
     producer = CharField()
     source = ForeignKeyField(Source, backref="tracks")
-    album = ForeignKeyField(Album, backref="tracks")
+
     start_time = TimeField()  # should these be stored as ms and converted as needed?
-    track_number = IntegerField()
+    track_number = IntegerField(null=True)
     track_title = CharField()
     words = CharField()
+
+    @classmethod
+    def do_not_exist(cls) -> ModelSelect:
+        result = cls.select().where(
+            cls.exists == 0
+        )  # ignore (turn off pylance warnings)
+        return result
 
 
 def database_setup():
     database.connect()
-    database.create_tables([Source, Track, Album])
+    database.create_tables([Source, Track])
 
 
 if __name__ == "__main__":

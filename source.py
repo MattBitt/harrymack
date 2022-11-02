@@ -11,8 +11,10 @@ import subprocess
 from datetime import datetime
 from pydub import AudioSegment
 from pydub_functions import split_on_silence, detect_silence
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 
-from album import Album
 
 from utils import convert_date_string, convert_date_time_object
 
@@ -24,7 +26,7 @@ from yt_dlp_functions import get_json_info
 
 class Sources:
     def __init__(self):
-        pass
+        self.table = SourceTbl
 
     def unused(self):
         pass
@@ -38,9 +40,16 @@ class Sources:
     def new(self):
         pass
 
+    def get(self, to_match):
+        match to_match:
+            case {"url": url}:
+                return self.table.select().where(self.table.url == url).get()
+
     def all(self):
         # return all (except for ignored records)
-        return list(SourceTbl.select().where(not SourceTbl.ignore))
+        return self.table.select()
+
+    # return SourceTbl.select().where(SourceTbl.id > 0 AND not SourceTbl.ignore)
 
     def ignored(self):
         pass
@@ -54,6 +63,7 @@ class Source:
         self.load_data(url, playlist, config)
         self.download_files()
         self.find_all_files()
+        self.resize_image(self.image_file, 1280, 1280)
 
         # self.find_all_files()
 
@@ -98,8 +108,8 @@ class Source:
         self.youtube_id = info["id"]
         self.video_type = playlist["video_type"]
         self.ignore = False
-        self.episode_number = ""
         self.album_name = ""
+        self.episode_number = ""
         self.upload_date = convert_date_string(info["upload_date"], "YYYY-MM-DD")
         self.audio_file = ""
         self.image_file = ""
@@ -153,7 +163,16 @@ class Source:
                     self.album_name = self.video_type + " " + self.episode_number
                 else:
                     self.album_name = self.video_type
-
+            # this_album = albums.get({"album_name": self.album_name})
+            # print(f"length of albums = {len(albums)}")
+            # print(f"length of this_album = {len(this_album)}")
+            # if self.album_name != "" and not this_album:
+            #     albums.add(self.album_name, self.split_by_silence)
+            #     self.album = albums.get({"album_name": self.album_name})
+            #     self.album = self.album[0].id
+            # elif albums.get({"album_name": self.album_name}):
+            #     self.album = albums.get({"album_name": self.album_name})[0].id
+            # need to create album here if it doesn't already exist.
         # else:
         #     self.logger.error(
         #         "No exceptions or templates found for video", self.video_title
@@ -321,12 +340,18 @@ class Source:
         hours = int(hours)
         return f"{hours:02}:{minutes:02}:{seconds:02}"
 
+    def mp3_exists(self) -> bool:
+        if self.audio_file == "":
+            return False
+        else:
+            return os.path.exists(str(self.audio_file))
+
     def save_to_db(self):
         # should there be create/update checks here?
         # will i ever need to update the data without starting from
         source = SourceTbl.create(
             album_name=self.album_name,
-            audio_exists=False,
+            audio_exists=self.mp3_exists(),
             audio_file=self.audio_file,
             created_date=self.created_date,
             description_file=self.description_file,
@@ -356,6 +381,12 @@ class Source:
 
         self.logger.warning("No Match found for {}", text)
         return ""
+
+    def resize_image(self, img_path: str, width: int, height: int):
+        img = Image.open(img_path)
+        new_img = img.resize((width, height))
+        new_img.save(img_path)
+        return new_img
 
     # def create_source_video_object(self, url: str, playlist: dict, config: dict):
 

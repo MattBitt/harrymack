@@ -37,7 +37,7 @@ channels:
           - video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
             episode_number: "070"
           - video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
-            episode_number: "071"
+            episode_number: "072"
         typical_video:
           - episode_number_patterns:
               - Wordplay Wednesday \#([0-9]+)
@@ -104,6 +104,10 @@ channels:
     playlists:
       - video_type: Omegle Bars Unreleased
         url: https://www.youtube.com/playlist?list=PLVuktCy_G9zKL9Ty5HiX33-C8aAoYj6mB
+        split_by_silence: false
+        separate_album_per_episode: false
+      - video_type: Guerrilla Bars Unreleased
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJqDdVAuYWwjjvvFfe4xSip
         split_by_silence: false
         separate_album_per_episode: false
 

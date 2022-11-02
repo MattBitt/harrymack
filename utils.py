@@ -2,7 +2,7 @@ from datetime import datetime
 from loguru import logger
 
 
-def convert_date_string(self, dt: str, format: str) -> str:
+def convert_date_string(dt: str, format: str) -> str:
     match format:
         case "YYYY-MM-DD":
             if len(dt) == 8:
@@ -16,5 +16,5 @@ def convert_date_string(self, dt: str, format: str) -> str:
             raise KeyError()
 
 
-def convert_date_time_object(self, dt: datetime):
+def convert_date_time_object(dt: datetime):
     return dt.strftime("%Y-%m-%d")

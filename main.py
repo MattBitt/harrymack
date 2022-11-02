@@ -20,12 +20,12 @@ import random
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
 
-from source import Source, Sources
-from track import Track
-from album import Album
+from source import Source
+from track import TrackImporter, Track
+from album import Album, Albums
 from models import database_setup
 
-# from models import Source as SourceTbl
+
 from models import Track as TrackTbl
 from models import Source as SourceTbl
 
@@ -487,8 +487,6 @@ def import_sources_to_db(config):
                         source.save_to_db()
                     else:
                         logger.debug("Video {} already exits", url)
-    sources = Sources()
-    return sources.all()
 
 
 def import_tracks_to_db(config, sources):
@@ -499,46 +497,60 @@ def import_tracks_to_db(config, sources):
     new_albums = []
     moods = []
     # * Loop through each clip in the CSV
+    missing_sources = set()
     for data_row in data_rows:
+
         album_image = ""
         # source = Source(data_row, config)
         # if not source.exists(
         #     "audio"
         # ):  # ? would i ever want to overwrite the downloads?
         #     source.download_files()
-        track = Track(data_row, config, source, id3)
+        if data_row["URL"] == "":
+            continue
+        try:
+            track = TrackImporter(data_row, config)
+        except FileNotFoundError:
+            logger.debug("Not able to create object {}", data_row["URL"])
+            missing_sources.add(data_row["AlbumName"] + " : " + data_row["URL"])
+            continue
+        query = TrackTbl.select().where(TrackTbl.track_title == track.track_title)
+        if query.exists():
+            # logger.debug("Track {} already exists in DB", track.file_path)
+            pass
+        else:
+            logger.debug("Track {} is new.  Adding to DB", track.track_title)
+            track.save_to_db()
         # track.add_source(source)
-        if not track.exists() or (track.exists() and config["overwrite_destination"]):
-            track.extract_from_source()
-            track.write_id3_tags()
+        # if not track.exists() or (track.exists() and config["overwrite_destination"]):
+        #    track.extract_from_source()
+        #    track.write_id3_tags()
+    logger.info("Missing sources:")
+    for ms in missing_sources:
+        logger.info(ms)
 
 
-def split_by_silence():
-    if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
-        orig_title = id3.title
-        orig_filename = data_row["Filename"] + " "
-        track_times = source.find_tracks()
+# def split_by_silence():
+#     if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
+#         orig_title = id3.title
+#         orig_filename = data_row["Filename"] + " "
+#         track_times = source.find_tracks()
 
-        for tt in track_times:
-            data_row["StartTime"], data_row["EndTime"] = tt
-            time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
-            id3.track_number = str((int(id3.track_number) + 1))
-            id3.title = orig_title + " " + id3.track_number
+#         for tt in track_times:
+#             data_row["StartTime"], data_row["EndTime"] = tt
+#             time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
+#             id3.track_number = str((int(id3.track_number) + 1))
+#             id3.title = orig_title + " " + id3.track_number
 
-            data_row["Filename"] = (
-                orig_filename + id3.track_number + " (" + time_string + ")"
-            )
-            track = Track(data_row, config, source, id3)
-            if not track.exists() or (
-                track.exists() and config["overwrite_destination"]
-            ):
-                track.extract_from_source()
-                track.write_id3_tags()
-
-
-# def get_episode_number(video_title: str, patterns: str) -> str:
-
-# use regex to determine if this file matches.  if it does return the episode number
+#             data_row["Filename"] = (
+#                 orig_filename + id3.track_number + " (" + time_string + ")"
+#             )
+#             track = TrackImporter(data_row, config, source, id3)
+#             if not track.exists() or (
+#                 track.exists() and config["overwrite_destination"]
+#             ):
+#                 track.extract_from_source()
+#                 track.write_id3_tags()
 
 
 # ! THERE IS NO TRACK!.  There should be a source object that transforms into a destination object along side  an ID3 object as well.  Abstract out the Track to those two classes
@@ -549,164 +561,25 @@ def split_by_silence():
 # ! source, destination, ID3 = load_track_data
 
 if __name__ == "__main__":
-    VERSION = "1.4.0"
+    VERSION = "2.0.0"
     CONFIG_PATH = "./config.yaml"
-    # VIDEOS_TO_SPLIT_BY_SILENCE = ["WordplayWednesday"]
 
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)
-
-    # *setup connection to plex
-    # plex = connect_to_server()
-    # font_counter = 0
-
-    # ! Try setting it up like this
-    # ! sources = import_sources_to_db() (should actually create album as well)
-    # ! tracks = import_tracks_to_db()
-    # ! albums = get_albums()
-    # ! for each album:
-    # !     album.create_tacks()
-
-    # ! album.create_tracks()
-    # !     if split_by_silence:
-    # !          do that
-    # !     else:
-    # !         tracks = select tracks where album = self
-    # !         for each track in tracks
-    # !             if track doesn't exist
-    # !                 track.create()
-    # !
-    # ! return list of tracks
-    # !
-
-    # ****************************************************************************************
-    # Checking YouTube to get all of the videos added to the channel
     database_setup()
-    sources = import_sources_to_db(config)
-    tracks = import_tracks_to_db(config, sources)
 
-    # * these functions return booleans depending on what needs to be done (download, audio processing)
-    # download_file = download_source_file(dr, config["overwrite_download"])
-    # ffmpeg_process = process_with_ffmpeg(dr, config["overwrite_destination"])
+    import_sources_to_db(config)
+    sources = SourceTbl
 
-    #     if download_file:
-    #         downloaded = youtube_download(dr, config)
-    #         if not downloaded:
-    #             logger.error(
-    #                 "Error downloading clip {}. Skipping to next track", dr.url
-    #             )
-    #             continue
+    import_tracks_to_db(config, sources)
+    tracks = TrackTbl
 
-    #     if ffmpeg_process:
-    #         pass
+    for track in tracks.do_not_exist():
+        logger.debug("Need to create {} mp3", track.track_title)
 
-    #     if dr.album != previous_album:
-    #         # * This clip is part of a different album than the previous.
-    #         # * if there was a previous album should i delete it?  probably not.
-    #         # * should wait until the end and delete everthing in the downloads folder
-    #         # ? should i check for files in downloads folder on start?  give warning?
-    #         # ? Create the folder /musicroot/album
-    #         # ? Take the album image and resize it to 1280x1280.  Make a copy called 'album.jpg'.  move to /musicroot/album folder
-    #         new_album = True
-    #         previous_album = track.album
-    #         create_album_folder(track.destination_directory)
-    #         new_albums.append(track.album)
-    #     else:
-    #         new_album = False
-
-    #     # * This function call should create 3 files:
-    #     #   * the mp3 file, the description file, and the image file
-    #     #   * once they are downloaded, the files will have the upload date in the name.  should probably remove it after capturing it
-
-    #     # * This function takes the source (downloads) directory and base filename
-    #     # * It will extract the year from the upload date, rename the files with the date removed and assign the files
-    #     # * to the music, audio, and description items in the files dictionary
-    #     downloaded_files, year = parse_files(source_directory, track.source_video_name)
-
-    #     if downloaded_files["image"]:
-    #         if downloaded_files["image"][-4:] == "webp":  # convert webp to jpg file
-    #             downloaded_files["image"] = convert_to_jpg(
-    #                 downloaded_files["image"], downloaded_files["image"][:-5] + ".jpg"
-    #             )
-    #         if new_album:
-    #             # album_image = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-    #             im = Image.open(downloaded_files["image"])
-    #             im = resize_image(im, 1280, 1280)
-    #             im.save(source_directory + "album.jpg")
-    #             copy_file(
-    #                 source_directory + "album.jpg",
-    #                 destination_directory + "album.jpg",
-    #                 True,
-    #             )
-    #             # downloaded_files['image'] = destination_directory  + "album.jpg"
-    #         # downloaded_files['image'] = resize_image(downloaded_files['image'], source_directory + 'album.jpg', 1280, 1280)
-    #         anchor_location = (0, 1100)
-    #         image_dimensions = (1280, 1280)
-    #         text_area_dimensions = (1280, 120)
-    #         text_area = TextArea(
-    #             text_area_dimensions, image_dimensions, anchor_location
-    #         )
-    #         if track.track_title[0:2] == "OB":
-    #             im = prepare_image(
-    #                 downloaded_files["image"], text_area, 1280, 1280, True
-    #             )
-    #         else:
-    #             im = prepare_image(
-    #                 downloaded_files["image"], text_area, 1280, 1280, False
-    #             )
-    #         draw = ImageDraw.Draw(im)
-    #         word_strings = track.words.split(",")
-    #         if config["font_sample"]:
-    #             fonts = get_fonts("./fonts/")
-    #             font_name = "./fonts/" + fonts[font_counter]
-    #             font_counter = font_counter + 1
-    #             f = ImageFont.truetype("./fonts/courbd.ttf", 96)
-    #             draw.rectangle([(50, 50), (1230, 300)], fill=(0, 0, 0))
-    #             draw.text((100, 100), font_name, font=f, fill=(0, 255, 0))
-    #         else:
-    #             font_name = config["font_name"]
-    #         wg = WordGrid(text_area, word_strings, font_name)
-
-    #         if wg:
-    #             wg.draw_text_area(draw)
-    #             for w in wg.words:
-    #                 wr = w.width_rectangle()
-    #                 mwr = w.max_width_rectangle()
-    #                 # draw.rectangle(wr, fill=(0,0,255), outline=(0,0,255), width=2)
-    #                 # draw.rectangle(mwr, fill=(0,255,255), outline=(0,255,255), width=2)
-    #             wg.draw_words(draw)
-    #             im.save("./media/working/" + track.title + ".jpg")
-    #             downloaded_files["image"] = "./media/working/" + track.title + ".jpg"
-    #         else:
-    #             print("Error creating WordGrid.  Check the words and try again")
-    #             exit()
-    #     else:
-    #         print("Image not returned. Quitting")
-    #         exit()
-    #     extract_audio(
-    #         downloaded_files["audio"], new_file, track.start_time, track.end_time
-    #     )
-    #     update_id3(
-    #         new_file,
-    #         track.artist,
-    #         album,
-    #         track.track_title,
-    #         track.track_number,
-    #         year,
-    #         downloaded_files["image"],
-    #     )
-
-    #     # * need to add the moods after the plex library has been updated.  instead of updating the library for every track,
-    #     # * just add it to a list.  once the library is updated (maybe sleep to allow it to finish?), loop through this list and addMood that way
-    #     if track.producer:
-    #         moods.append((track.track_title, track.producer))
-
-    # print("Updating Plex")
-    # plex_update_library(plex, "Harry Mack")
-    # if new_albums:
-    #     print(f"The following albums were created:  {new_albums}")
-
-    # print(f"Finished processing {len(tracks)} tracks.")
-    # for title, producer in moods:
-    #     add_mood(plex, "Harry Mack", title, producer)
+        track_object = Track(track, config)
+        track_object.extract_from_source()
+        track_object.write_id3_tags()
+        track.exists = True
+        track.save()

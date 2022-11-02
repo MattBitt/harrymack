@@ -1,5 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.8
+FROM python:3.11
 
 
 # Keeps Python from generating .pyc files in the container
@@ -28,4 +28,4 @@ COPY . /app
 #USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "harrymack.py"]
+CMD ["python", "main.py"]
