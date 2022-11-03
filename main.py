@@ -160,18 +160,25 @@ def default_config():
     }
 
 
-def setup_logging():
+def setup_logging(config):
     logger.remove(0)
     # adds logging to stderr
-    log_format = (
-        "<white>{time: YYYY-MM-DD HH:mm:ss.SSS} | </white>"
-        "<lvl>[{level: <8}]"
-        "</lvl><yellow>{name}:<c>{extra[classname]}</c>:{function}:{line}</yellow> - "
-        "<lvl>{message}</lvl>"
-    )
+    if config["log_level"] == "DEBUG":
+        log_format = (
+            "<white>{time: YYYY-MM-DD HH:mm:ss.SSS} | </white>"
+            "<lvl>[{level: <8}]"
+            "</lvl><yellow>{name}:<c>{extra[classname]}</c>:{function}:{line}</yellow> - "
+            "<lvl>{message}</lvl>"
+        )
+        logger.configure(extra={"classname": "None"})
+        logger.add(
+            sys.stderr, format=log_format, level=config["log_level"], colorize=True
+        )
+    else:
+        log_format = "{time: YYYY-MM-DD HH:mm:ss} | [{level: <8}] {name}: {message}"
+        logger.add(sys.stderr, format=log_format, level=config["log_level"])
+
     # TODO: Setup a separate logging format if not in debug.  get rid of classes and line numbers...
-    logger.configure(extra={"classname": "None"})
-    logger.add(sys.stderr, format=log_format, level=config["log_level"], colorize=True)
 
     # ! don't log to file on production.  run in docker so it should handle the log cleanup
     if config["log_level"] == "DEBUG" and not config["enviornment"] == "env_prod":
@@ -565,7 +572,7 @@ if __name__ == "__main__":
     CONFIG_PATH = "./config.yaml"
 
     config = load_config(CONFIG_PATH)
-    logger = setup_logging()
+    logger = setup_logging(config)
     logger.success("Starting Program ({})", VERSION)
     database_setup()
 
