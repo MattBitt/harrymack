@@ -175,7 +175,7 @@ def setup_logging(config):
             sys.stderr, format=log_format, level=config["log_level"], colorize=True
         )
     else:
-        log_format = "{time: YYYY-MM-DD HH:mm:ss} | [{level: <8}] {name}: {message}"
+        log_format = "{time: YYYY-MM-DD HH:mm:ss} | [{level: <8}] | {message}"
         logger.add(sys.stderr, format=log_format, level=config["log_level"])
 
     # TODO: Setup a separate logging format if not in debug.  get rid of classes and line numbers...
@@ -576,17 +576,24 @@ if __name__ == "__main__":
     logger.success("Starting Program ({})", VERSION)
     database_setup()
 
+    logger.info("Importing sources to DB")
     import_sources_to_db(config)
+    logger.info("Downloading source files")
     sources = SourceTbl
 
+    logger.info("Importing specified tracks to DB")
     import_tracks_to_db(config, sources)
+
     tracks = TrackTbl
 
+    logger.info("Creating specified tracks")
     for track in tracks.do_not_exist():
         logger.debug("Need to create {} mp3", track.track_title)
-
         track_object = Track(track, config)
-        track_object.extract_from_source()
+        try:
+            track_object.extract_from_source()
+        except IndexError:
+            continue
         track_object.write_id3_tags()
         track.exists = True
         track.save()

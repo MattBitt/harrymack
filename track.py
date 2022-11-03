@@ -112,6 +112,12 @@ class Track:
 
     def extract_from_source(self):
         self.logger.debug("Starting extraction from {}.", self.track_row.source.url)
+        if str(self.track_row.start_time) == str(self.track_row.end_time):
+            logger.error(
+                "Start time and end time are the the same for track: {}",
+                self.track_row.source.audio_file,
+            )
+            raise IndexError
         self.create_folder()
         if not self.exists():
             args = [

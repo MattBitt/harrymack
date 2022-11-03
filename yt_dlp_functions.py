@@ -68,8 +68,9 @@ def get_options(url):
 
 
 # Downloads depending on the options set above
-def get_json_info(url):
+def get_json_info(url: str) -> dict:
     ydl_opts = get_options(url)
+    info = None
     if ydl_opts is not None:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -81,7 +82,9 @@ def get_json_info(url):
         # print(info["duration"])  # video length in seconds
         # print(info["upload_date"])
         # print(info["title"])
-        return info
+
+        if info is not None:
+            return info
     else:
         raise KeyError
 

@@ -24,37 +24,6 @@ import re
 from yt_dlp_functions import get_json_info
 
 
-class Sources:
-    def __init__(self):
-        self.table = SourceTbl
-
-    def unused(self):
-        pass
-
-    def does_not_exist(self):
-        pass
-
-    def stats(self):
-        pass
-
-    def new(self):
-        pass
-
-    def get(self, to_match):
-        match to_match:
-            case {"url": url}:
-                return self.table.select().where(self.table.url == url).get()
-
-    def all(self):
-        # return all (except for ignored records)
-        return self.table.select()
-
-    # return SourceTbl.select().where(SourceTbl.id > 0 AND not SourceTbl.ignore)
-
-    def ignored(self):
-        pass
-
-
 class Source:
     # This object represents a YouTube video.
 
