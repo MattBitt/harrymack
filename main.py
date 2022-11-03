@@ -568,7 +568,7 @@ def import_tracks_to_db(config, sources):
 # ! source, destination, ID3 = load_track_data
 
 if __name__ == "__main__":
-    VERSION = "2.0.0"
+    VERSION = "2.0.1"
     CONFIG_PATH = "./config.yaml"
 
     config = load_config(CONFIG_PATH)
@@ -597,3 +597,5 @@ if __name__ == "__main__":
         track_object.write_id3_tags()
         track.exists = True
         track.save()
+
+    logger.success("Program finished successfully")
