@@ -111,7 +111,7 @@ channels:
         split_by_silence: false
         separate_album_per_episode: false
 
-# use this for individual videos not on a channel shown above
+# use this for individual videos not on a channel/playlist listed above
 videos:
   - video_type: Misc
     url: https://www.youtube.com/watch?v=73WCDV51bo0
@@ -119,3 +119,26 @@ videos:
   - video_type: "Omegle Bars 032.5"
     url: https://www.youtube.com/watch?v=t_JrcAOfAp4
     split_by_silence: false
+  - video_type: "Omegle Bars Unreleased"
+    url: https://www.youtube.com/watch?v=66UNzgffyWk
+    split_by_silence: false
+  - video_type: "SOULilloquies"
+    url: https://www.youtube.com/watch?v=F7FsA3JSOHQ
+    split_by_silence: false
+  - video_type: "Rap Coltrane"
+    url: https://www.youtube.com/watch?v=rLIkQLj3uJo
+    split_by_silence: false
+  - video_type: "Contents Under Pressure"
+    url: https://www.youtube.com/watch?v=Pv_f7wMrpqY
+    split_by_silence: false
+  - video_type: "Omegle Bars Unreleased"
+    url: https://www.youtube.com/watch?v=RDwhRhbLT4w
+    split_by_silence: false
+  - video_type: "Happy Hour Clips"
+    url: https://www.youtube.com/watch?v=73WCDV51bo0
+    split_by_silence: false
+# :
+# :
+# :
+# :
+#:

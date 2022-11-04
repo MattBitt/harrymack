@@ -496,25 +496,12 @@ def import_sources_to_db(config):
                         logger.debug("Video {} already exits", url)
 
 
-def import_tracks_to_db(config, sources):
+def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
-    album = None
-    previous_album = None
-    new_album = False
-    new_albums = []
-    moods = []
-    # * Loop through each clip in the CSV
     missing_sources = set()
     for data_row in data_rows:
-
-        album_image = ""
-        # source = Source(data_row, config)
-        # if not source.exists(
-        #     "audio"
-        # ):  # ? would i ever want to overwrite the downloads?
-        #     source.download_files()
         if data_row["URL"] == "":
-            continue
+            continue # make sure a source url exists to create a track entry in the db
         try:
             track = TrackImporter(data_row, config)
         except FileNotFoundError:
@@ -528,44 +515,22 @@ def import_tracks_to_db(config, sources):
         else:
             logger.debug("Track {} is new.  Adding to DB", track.track_title)
             track.save_to_db()
-        # track.add_source(source)
-        # if not track.exists() or (track.exists() and config["overwrite_destination"]):
-        #    track.extract_from_source()
-        #    track.write_id3_tags()
+
     logger.info("Missing sources:")
     for ms in missing_sources:
         logger.info(ms)
 
 
-# def split_by_silence():
-#     if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
-#         orig_title = id3.title
-#         orig_filename = data_row["Filename"] + " "
-#         track_times = source.find_tracks()
+def create_track_mp3(track, config):
+        track_object = Track(track, config)
+        try:
+            track_object.extract_from_source()
+        except IndexError:
+            logger.error("Error creating track {}", track.track_title)
+        track_object.write_id3_tags()
+        track.exists = True
+        track.save()
 
-#         for tt in track_times:
-#             data_row["StartTime"], data_row["EndTime"] = tt
-#             time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
-#             id3.track_number = str((int(id3.track_number) + 1))
-#             id3.title = orig_title + " " + id3.track_number
-
-#             data_row["Filename"] = (
-#                 orig_filename + id3.track_number + " (" + time_string + ")"
-#             )
-#             track = TrackImporter(data_row, config, source, id3)
-#             if not track.exists() or (
-#                 track.exists() and config["overwrite_destination"]
-#             ):
-#                 track.extract_from_source()
-#                 track.write_id3_tags()
-
-
-# ! THERE IS NO TRACK!.  There should be a source object that transforms into a destination object along side  an ID3 object as well.  Abstract out the Track to those two classes
-# ! that way, both the source and destination objects can use the ID3 object.
-# ? would this be the path or the actual file?  any use in capturing the actual file?
-# ! destination.audio = source.audio.extract(start_time, end_time)
-# ! something like:
-# ! source, destination, ID3 = load_track_data
 
 if __name__ == "__main__":
     VERSION = "2.0.1"
@@ -582,20 +547,25 @@ if __name__ == "__main__":
     sources = SourceTbl
 
     logger.info("Importing specified tracks to DB")
-    import_tracks_to_db(config, sources)
+    import_tracks_to_db(config)
 
     tracks = TrackTbl
 
-    logger.info("Creating specified tracks")
+    logger.info("Creating manually declared tracks")
     for track in tracks.do_not_exist():
         logger.debug("Need to create {} mp3", track.track_title)
-        track_object = Track(track, config)
-        try:
-            track_object.extract_from_source()
-        except IndexError:
-            continue
-        track_object.write_id3_tags()
-        track.exists = True
-        track.save()
+        create_track_mp3(track, config)
+
+    for source in sources.split_by_silence():
+        if source.exists():
+            logger.debug("Source already exists")
+        else:
+            # need to loop through the source finding silences
+            # that should return a list of tuples?
+            # for interval in source:
+            #   track = create_track_in_db()
+            #   track.extract_from_source()
+
+
 
     logger.success("Program finished successfully")

@@ -39,7 +39,7 @@ class TrackImporter:
         self.root_directory = Path(config[config["enviornment"]]["music_root"])
         self.filename = data_row["Filename"]
         self.extension = ".mp3"
-        self.title = data_row["Title"]
+        self.title = data_row["Title"]  # ! why are there 2 of these???
         self.url = data_row["URL"]
         self.beat_name = data_row["BeatName"]
         self.producer = data_row["Producer"]
