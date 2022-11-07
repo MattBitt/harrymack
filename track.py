@@ -39,7 +39,8 @@ class TrackImporter:
         self.root_directory = Path(config[config["enviornment"]]["music_root"])
         self.filename = data_row["Filename"]
         self.extension = ".mp3"
-        self.title = data_row["Title"]  # ! why are there 2 of these???
+        self.filename = data_row["Title"]
+
         self.url = data_row["URL"]
         self.beat_name = data_row["BeatName"]
         self.producer = data_row["Producer"]
@@ -57,6 +58,10 @@ class TrackImporter:
             self.album_name = query.first().album_name
             new_query = TrackTbl.select().where(TrackTbl.album_name == self.album_name)
             self.track_number = len(new_query) + 1
+            if self.track_title == "":
+                self.track_title = self.album_name + " Part " + str(self.track_number)
+            if self.filename == "":
+                self.filename = str(self.track_number) + " - " + self.track_title
 
         else:
             # self.logger.debug("Source {} does not exist", self.url)
@@ -88,7 +93,7 @@ class TrackImporter:
                 self.start_time
             ),  # should these be stored as ms and converted as needed?
             track_number=self.track_number,
-            track_title=self.title,
+            track_title=self.track_title,
             words=self.words,
         )
         # if self.source.split_by_times():

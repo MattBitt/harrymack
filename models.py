@@ -56,6 +56,16 @@ class Source(BaseModel):
         result = cls.select().where(cls.ignore.is_null(False))
         return result
 
+    @classmethod
+    def get_split_by_silence(cls):
+        result = cls.select().where(cls.split_by_silence == 1)
+        return result
+
+    @classmethod
+    def do_not_exist(cls) -> ModelSelect:
+        result = cls.select().where(cls.audio_exists == 0)
+        return result
+
 
 class Track(BaseModel):
     artist_name = CharField()
@@ -78,9 +88,12 @@ class Track(BaseModel):
 
     @classmethod
     def do_not_exist(cls) -> ModelSelect:
-        result = cls.select().where(
-            cls.exists == 0
-        )  # ignore (turn off pylance warnings)
+        result = cls.select().where(cls.exists == 0)
+        return result
+
+    @classmethod
+    def with_album(cls, album: str) -> ModelSelect:
+        result = cls.select().where(cls.album_name == album)
         return result
 
 

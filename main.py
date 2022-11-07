@@ -20,7 +20,7 @@ import random
 from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
 
-from source import Source
+from source import SourceImporter, Source
 from track import TrackImporter, Track
 
 from models import database_setup
@@ -487,7 +487,7 @@ def import_sources_to_db(config):
                     if not query.exists():
                         logger.debug("Video doesn't exist in DB.  Need to create")
                         try:
-                            source = Source(url, playlist, config)
+                            source = SourceImporter(url, playlist, config)
                         except FileNotFoundError:
                             logger.warning("Not able to create object {}", url)
                             continue
@@ -501,7 +501,7 @@ def import_tracks_to_db(config):
     missing_sources = set()
     for data_row in data_rows:
         if data_row["URL"] == "":
-            continue # make sure a source url exists to create a track entry in the db
+            continue  # make sure a source url exists to create a track entry in the db
         try:
             track = TrackImporter(data_row, config)
         except FileNotFoundError:
@@ -522,14 +522,25 @@ def import_tracks_to_db(config):
 
 
 def create_track_mp3(track, config):
-        track_object = Track(track, config)
-        try:
-            track_object.extract_from_source()
-        except IndexError:
-            logger.error("Error creating track {}", track.track_title)
+    track_object = Track(track, config)
+    try:
+        track_object.extract_from_source()
         track_object.write_id3_tags()
         track.exists = True
         track.save()
+        return track
+    except IndexError:
+        logger.error("Error creating track {}", track.track_title)
+
+
+def import_sources_and_tracks(config):
+    if not config["import_during_testing"] and config["enviornment"] == "env_dev":
+        return False
+
+    logger.info("Importing sources to DB")
+    import_sources_to_db(config)
+    logger.info("Importing specified tracks to DB")
+    import_tracks_to_db(config)
 
 
 if __name__ == "__main__":
@@ -540,32 +551,67 @@ if __name__ == "__main__":
     logger = setup_logging(config)
     logger.success("Starting Program ({})", VERSION)
     database_setup()
+    import_sources_and_tracks(config)
 
-    logger.info("Importing sources to DB")
-    import_sources_to_db(config)
     logger.info("Downloading source files")
     sources = SourceTbl
-
-    logger.info("Importing specified tracks to DB")
-    import_tracks_to_db(config)
+    for source in sources.do_not_exist():  # mp3 doesn't exist
+        source_object = Source(source, config)
+        source_object.download_files()
 
     tracks = TrackTbl
 
-    logger.info("Creating manually declared tracks")
+    for source in sources.get_split_by_silence():  # each record in db table
+        # need list of sources that need to be split by silence
+        # also need to know which ones have already been created
+        # TODO remove "if check" to do more than one video at a time.  wait until pydub parameters are well established
+        if (
+            source.video_title
+            == "Celebrating 2 MILLION Subscribers - Harry Mack Live Chat Freestyle | Wordplay Wednesday #93asdf"
+        ):
+            source_object = Source(source, config)
+            num_existing_tracks = len(tracks.with_album(source.album_name))
+            track_intervals = source_object.find_tracks()
+            # print(len(track_intervals))
+            # print(track_intervals)
+            if num_existing_tracks != 0:
+                if num_existing_tracks != len(track_intervals):
+                    # should remove all tracks with this album from the db and the actual mp3s
+                    # this would mean that if the pydub parameters change, that will probably
+                    # mean a different number of tracks so it should recreate them using the new settings
+                    # ! delete_tracks_from_drive(source.album_name)
+                    # ! delete_tracks_from_db(source.album_name)
+                    pass
+                else:
+                    # this means that there are the same number of existing tracks as intervals returned
+                    # nothing to do here
+                    logger.debug(
+                        "Already {} existing tracks for {}.  Nothing to do",
+                        str(num_existing_tracks),
+                        source.album_name,
+                    )
+                    continue
+            logger.info("Creating {} tracks in DB", str(len(track_intervals)))
+            for start_time, end_time in track_intervals:
+                data_row = {}
+                data_row["Title"] = ""
+                data_row["Filename"] = ""
+                data_row["StartTime"] = start_time
+                data_row["EndTime"] = end_time
+                data_row["URL"] = source.url
+                data_row["BeatName"] = ""
+                data_row["Producer"] = ""
+                data_row["ArtistName"] = "Harry Mack"
+
+                track = TrackImporter(data_row, config)
+                track.save_to_db()
+
+    logger.info(
+        "Creating tracks that exist in the db but do not have an mp3 file created"
+    )
     for track in tracks.do_not_exist():
         logger.debug("Need to create {} mp3", track.track_title)
         create_track_mp3(track, config)
-
-    for source in sources.split_by_silence():
-        if source.exists():
-            logger.debug("Source already exists")
-        else:
-            # need to loop through the source finding silences
-            # that should return a list of tuples?
-            # for interval in source:
-            #   track = create_track_in_db()
-            #   track.extract_from_source()
-
-
-
+    plex = connect_to_server()
+    plex_update_library(plex, "Harry Mack")
     logger.success("Program finished successfully")

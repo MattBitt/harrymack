@@ -10,6 +10,7 @@ env_dev:
 env_prod:
   download_directory: /downloads/
   music_root: /music/
+import_during_testing: false
 fonts:
   font_name: ./media/fonts/courbd.ttf
   font_sample: false
@@ -18,6 +19,11 @@ fonts:
 plex:
   baseurl: !ENV ${PLEXURL}
   token: !ENV ${PLEX}
+pydub:
+  min_silence_len: 700 # milliseconds
+  silence_thresh: -18
+  seek_step: 15 # milliseconds
+  target_length: 360 # seconds
 channels:
   - channel_name: Harry Mack
     url: https://www.youtube.com/c/HarryMack
@@ -67,7 +73,7 @@ channels:
               - "Omegle Bars Ep. ([0-9]+)"
       - video_type: Guerrilla Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPD7NJ92Jr8s8JFGdmOmMS95
-        split_by_silence: true
+        split_by_silence: false
         separate_album_per_episode: true
         video_exceptions:
           - video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1

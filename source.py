@@ -24,15 +24,12 @@ import re
 from yt_dlp_functions import get_json_info
 
 
-class Source:
+class SourceImporter:
     # This object represents a YouTube video.
 
     def __init__(self, url: str, playlist: dict, config: dict):
         self.logger = logger.bind(classname=self.__class__.__name__)
         self.load_data(url, playlist, config)
-        self.download_files()
-        self.find_all_files()
-        self.resize_image(self.image_file, 1280, 1280)
 
         # self.find_all_files()
 
@@ -152,6 +149,59 @@ class Source:
         # self.episode_number = info["EpisodeNumber"]
         # self.album_name
 
+    def find_episode_number(self, text: str, patterns: list) -> str:
+        if text == "" or patterns == []:
+            self.logger.error("No text or pattern found {} {}", text, patterns)
+            raise KeyError
+        for pattern in patterns:
+            self.logger.debug("Pattern = {}", pattern)
+            # print(re.search(pattern, video_title, re.DEBUG))
+            pattern = re.compile(pattern)
+            result = pattern.search(text)
+            if result is not None:
+                return str(result.groups(1)[0]).zfill(3)
+
+        self.logger.warning("No Match found for {}", text)
+        return ""
+
+    def mp3_exists(self) -> bool:
+        if self.audio_file == "":
+            return False
+        else:
+            return os.path.exists(str(self.audio_file))
+
+    def save_to_db(self):
+        # should there be create/update checks here?
+        # will i ever need to update the data without starting from
+        source = SourceTbl.create(
+            album_name=self.album_name,
+            audio_exists=self.mp3_exists(),
+            audio_file=self.audio_file,
+            created_date=self.created_date,
+            description_file=self.description_file,
+            episode_number=self.episode_number,
+            ignore=self.ignore,
+            image_file=self.image_file,
+            split_by_silence=self.split_by_silence,
+            upload_date=self.upload_date,
+            url=self.url,
+            video_title=self.video_title,
+            video_type=self.video_type,
+            youtube_id=self.youtube_id,
+        )
+        self.logger.success("Added record {}", self.video_title)
+
+
+class Source:
+    def __init__(self, source, config):
+        self.logger = logger.bind(classname=self.__class__.__name__)
+        self.source_row = source
+        self.config = config
+        self.root_directory = Path(
+            self.config[config["enviornment"]]["download_directory"]
+        )
+        self.file_base_path = self.root_directory / self.source_row.youtube_id
+
     def exists(self) -> bool:
         """
         the download is considered to exist if the mp3 file is there.  this is the file that i name in the download command
@@ -200,15 +250,19 @@ class Source:
             "-o",
             str(self.file_base_path) + ".mp3",
             "--write-thumbnail",
-            self.url,
+            self.source_row.url,
         ]
-        self.logger.info("Starting download of {}", self.url)
+        self.logger.info("Starting download of {}", self.source_row.url)
         yt_dl = subprocess.run(args1 + args2 + args3)
         if yt_dl.returncode:
             self.logger.error("There was an error processing {}", yt_dl.returncode)
             return False
         else:
-            self.logger.success("The file was successfully downloaded:  {}", self.url)
+            self.logger.success(
+                "The file was successfully downloaded:  {}", self.source_row.url
+            )
+            self.find_all_files()
+            self.resize_image(self.source_row.image_file, 1280, 1280)
             return True
 
     def find_all_files(self):
@@ -226,12 +280,16 @@ class Source:
                 if not f == "":
                     filenames[k] = str(f)
                     continue
-        self.audio_file = filenames["audio"]
-        self.image_file = filenames["image"]
-        self.description_file = filenames["description"]
+        self.source_row.audio_file = filenames["audio"]
+        self.source_row.image_file = filenames["image"]
+        self.source_row.description_file = filenames["description"]
+        self.source_row.audio_exists = True
+        self.source_row.save()
 
     def find_file(self, pattern) -> Path | str | None:
-        search_string = str(self.root_directory / (self.youtube_id + pattern))
+        search_string = str(
+            self.root_directory / (self.source_row.youtube_id + pattern)
+        )
         file_list = glob.glob(search_string)
         if len(file_list) == 1:
             return file_list[0]
@@ -244,20 +302,25 @@ class Source:
             return ""
 
     def find_tracks(self) -> list[tuple[str, str]]:
-        if self.audio_file == "":
+        pydub_config = self.config["pydub"]
+        min_silence = pydub_config["min_silence_len"]
+        silence_thr = pydub_config["silence_thresh"]
+        seek_st = pydub_config["seek_step"]
+        target_len = pydub_config["target_length"]
+        if self.source_row.audio_file == "":
             logger.error("No audio file found.  Cannot proceed")
             raise FileNotFoundError
-        self.logger.debug("Analyzing audio clip {}", self.audio_file)
-        whole_track = AudioSegment.from_mp3(self.audio_file)
+        self.logger.debug("Analyzing audio clip {}", self.source_row.audio_file)
+        whole_track = AudioSegment.from_mp3(self.source_row.audio_file)
         # silences = self.detect_silence(whole_track)
         chunks = detect_silence(
             whole_track,
-            min_silence_len=800,
-            silence_thresh=-16,
-            seek_step=50,
+            min_silence_len=min_silence,
+            silence_thresh=silence_thr,
+            seek_step=seek_st,
         )
         # now recombine the chunks so that the parts are at least 90 sec long
-        target_length = 180 * 1000
+        target_length = target_len * 1000
         output_chunks = []
         new_chunk = True
         start_time = 0
@@ -282,7 +345,7 @@ class Source:
 
     def convert_list_ms_to_list_start_end(self, chunks):
         output = []
-        time_margin = 3000  # ms to keep around tracks
+        time_margin = 10  # ms to keep around tracks
         for start_time, end_time in chunks:
             if start_time < time_margin:
                 start_time = 0
@@ -309,53 +372,33 @@ class Source:
         hours = int(hours)
         return f"{hours:02}:{minutes:02}:{seconds:02}"
 
-    def mp3_exists(self) -> bool:
-        if self.audio_file == "":
-            return False
-        else:
-            return os.path.exists(str(self.audio_file))
-
-    def save_to_db(self):
-        # should there be create/update checks here?
-        # will i ever need to update the data without starting from
-        source = SourceTbl.create(
-            album_name=self.album_name,
-            audio_exists=self.mp3_exists(),
-            audio_file=self.audio_file,
-            created_date=self.created_date,
-            description_file=self.description_file,
-            episode_number=self.episode_number,
-            ignore=self.ignore,
-            image_file=self.image_file,
-            split_by_silence=self.split_by_silence,
-            upload_date=self.upload_date,
-            url=self.url,
-            video_title=self.video_title,
-            video_type=self.video_type,
-            youtube_id=self.youtube_id,
-        )
-        self.logger.success("Added record {}", self.video_title)
-
-    def find_episode_number(self, text: str, patterns: list) -> str:
-        if text == "" or patterns == []:
-            self.logger.error("No text or pattern found {} {}", text, patterns)
-            raise KeyError
-        for pattern in patterns:
-            self.logger.debug("Pattern = {}", pattern)
-            # print(re.search(pattern, video_title, re.DEBUG))
-            pattern = re.compile(pattern)
-            result = pattern.search(text)
-            if result is not None:
-                return str(result.groups(1)[0]).zfill(3)
-
-        self.logger.warning("No Match found for {}", text)
-        return ""
-
     def resize_image(self, img_path: str, width: int, height: int):
         img = Image.open(img_path)
         new_img = img.resize((width, height))
         new_img.save(img_path)
         return new_img
+
+    def split_by_silence(self):
+        if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
+            orig_title = id3.title
+            orig_filename = data_row["Filename"] + " "
+            track_times = source.find_tracks()
+
+            for tt in track_times:
+                data_row["StartTime"], data_row["EndTime"] = tt
+                time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
+                id3.track_number = str((int(id3.track_number) + 1))
+                id3.title = orig_title + " " + id3.track_number
+
+                data_row["Filename"] = (
+                    orig_filename + id3.track_number + " (" + time_string + ")"
+                )
+                track = TrackImporter(data_row, config, source, id3)
+                if not track.exists() or (
+                    track.exists() and config["overwrite_destination"]
+                ):
+                    track.extract_from_source()
+                    track.write_id3_tags()
 
     # def create_source_video_object(self, url: str, playlist: dict, config: dict):
 
