@@ -10,7 +10,7 @@ env_dev:
 env_prod:
   download_directory: /downloads/
   music_root: /music/
-import_during_testing: false
+import_during_testing: true
 fonts:
   font_name: ./media/fonts/courbd.ttf
   font_sample: false
@@ -54,7 +54,6 @@ channels:
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPALgw6Ko7H78WxHC3pzxeZl
         split_by_silence: false
         separate_album_per_episode: true
-        #use_episode_number: true
         video_exceptions:
           - video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
             ignore: true
@@ -119,32 +118,19 @@ channels:
 
 # use this for individual videos not on a channel/playlist listed above
 videos:
-  - video_type: Misc
+  - video_type: "Misc"
     url: https://www.youtube.com/watch?v=73WCDV51bo0
-    split_by_silence: false
   - video_type: "Omegle Bars 032.5"
     url: https://www.youtube.com/watch?v=t_JrcAOfAp4
-    split_by_silence: false
   - video_type: "Omegle Bars Unreleased"
     url: https://www.youtube.com/watch?v=66UNzgffyWk
-    split_by_silence: false
   - video_type: "SOULilloquies"
     url: https://www.youtube.com/watch?v=F7FsA3JSOHQ
-    split_by_silence: false
   - video_type: "Rap Coltrane"
     url: https://www.youtube.com/watch?v=rLIkQLj3uJo
-    split_by_silence: false
   - video_type: "Contents Under Pressure"
     url: https://www.youtube.com/watch?v=Pv_f7wMrpqY
-    split_by_silence: false
   - video_type: "Omegle Bars Unreleased"
     url: https://www.youtube.com/watch?v=RDwhRhbLT4w
-    split_by_silence: false
   - video_type: "Happy Hour Clips"
-    url: https://www.youtube.com/watch?v=73WCDV51bo0
-    split_by_silence: false
-# :
-# :
-# :
-# :
-#:
+    url: https://www.youtube.com/watch?v=cnukKeC_phA

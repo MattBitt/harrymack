@@ -477,25 +477,53 @@ def get_path(path_list):
     return False
 
 
-def import_sources_to_db(config):
+def import_source_options(options):
+    default_options = {
+        "split_by_silence": False,
+        "separate_album_per_episode": False
+    }
+    option_return = {}
+    assert "video_type" in options.keys()
+    option_return["video_type"] = options["video_type"]
+    for k in default_options.keys():
+        if k in options.keys():
+            option_return[k] = options[k]
+        else:
+            option_return[k] = default_options[k]
+    return option_return
+
+def add_video_to_db(url, options, config):
+    query = SourceTbl.select().where(SourceTbl.url == url)
+    if not query.exists():
+        logger.debug("Video doesn't exist in DB.  Need to create")
+        try:
+            source = SourceImporter(url, options, config)
+            source.save_to_db()
+        except FileNotFoundError:
+            logger.warning("Not able to create object {}", url)
+    else:
+        logger.debug("Video {} already exits", url)
+
+def import_channels(config):
     for channel in config["channels"]:
         if "playlists" in channel.keys():
             for playlist in channel["playlists"]:
                 urls = get_playlist_videos(playlist["url"])
                 for url in urls:
-                    query = SourceTbl.select().where(SourceTbl.url == url)
-                    if not query.exists():
-                        logger.debug("Video doesn't exist in DB.  Need to create")
-                        try:
-                            source = SourceImporter(url, playlist, config)
-                        except FileNotFoundError:
-                            logger.warning("Not able to create object {}", url)
-                            continue
-                        source.save_to_db()
-                    else:
-                        logger.debug("Video {} already exits", url)
+                    options = import_source_options(playlist)
+                    add_video_to_db(url, options, config)
 
 
+def import_videos(config):
+    for video in config["videos"]:
+        options = import_source_options(video)
+        add_video_to_db(video["url"], options, config)
+
+
+def import_sources_to_db(config):
+    import_channels(config)
+    import_videos(config)
+    
 def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
     missing_sources = set()
@@ -544,7 +572,7 @@ def import_sources_and_tracks(config):
 
 
 if __name__ == "__main__":
-    VERSION = "2.0.1"
+    VERSION = "2.0.2"
     CONFIG_PATH = "./config.yaml"
 
     config = load_config(CONFIG_PATH)
@@ -553,8 +581,8 @@ if __name__ == "__main__":
     database_setup()
     import_sources_and_tracks(config)
 
-    logger.info("Downloading source files")
     sources = SourceTbl
+    logger.info("Downloading source files")
     for source in sources.do_not_exist():  # mp3 doesn't exist
         source_object = Source(source, config)
         source_object.download_files()

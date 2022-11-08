@@ -378,27 +378,27 @@ class Source:
         new_img.save(img_path)
         return new_img
 
-    def split_by_silence(self):
-        if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
-            orig_title = id3.title
-            orig_filename = data_row["Filename"] + " "
-            track_times = source.find_tracks()
+    # def split_by_silence(self):
+    #     if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
+    #         orig_title = id3.title
+    #         orig_filename = data_row["Filename"] + " "
+    #         track_times = source.find_tracks()
 
-            for tt in track_times:
-                data_row["StartTime"], data_row["EndTime"] = tt
-                time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
-                id3.track_number = str((int(id3.track_number) + 1))
-                id3.title = orig_title + " " + id3.track_number
+    #         for tt in track_times:
+    #             data_row["StartTime"], data_row["EndTime"] = tt
+    #             time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
+    #             id3.track_number = str((int(id3.track_number) + 1))
+    #             id3.title = orig_title + " " + id3.track_number
 
-                data_row["Filename"] = (
-                    orig_filename + id3.track_number + " (" + time_string + ")"
-                )
-                track = TrackImporter(data_row, config, source, id3)
-                if not track.exists() or (
-                    track.exists() and config["overwrite_destination"]
-                ):
-                    track.extract_from_source()
-                    track.write_id3_tags()
+    #             data_row["Filename"] = (
+    #                 orig_filename + id3.track_number + " (" + time_string + ")"
+    #             )
+    #             track = TrackImporter(data_row, config, source, id3)
+    #             if not track.exists() or (
+    #                 track.exists() and config["overwrite_destination"]
+    #             ):
+    #                 track.extract_from_source()
+    #                 track.write_id3_tags()
 
     # def create_source_video_object(self, url: str, playlist: dict, config: dict):
 
