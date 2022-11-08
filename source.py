@@ -54,11 +54,18 @@ class SourceImporter:
 
     def load_data(self, url, playlist, config) -> None:
         if url:
+            ignore = False
             info = get_json_info(url)
             if not info:
-                logger.debug("Probably a private video")
-                # TODO: Should still add this video to the db.  Just add "Unknown" for all fields?
-                raise FileNotFoundError()
+                ignore = True
+                info = {}
+                info["title"] = "Private Video"
+                info["original_url"] = url
+                info["id"] = "XXXXXXXXX"
+                info["upload_date"] = str(datetime.today())[0:10]
+                logger.debug("Probably a private video.  Adding to DB")
+                # Should still add this video to the db.  Just add "Unknown" for all fields?
+                # raise FileNotFoundError()
         else:
             self.logger.error("No URL found.  Quitting")
             raise FileNotFoundError()
@@ -73,7 +80,7 @@ class SourceImporter:
         self.url = info["original_url"]
         self.youtube_id = info["id"]
         self.video_type = playlist["video_type"]
-        self.ignore = False
+        self.ignore = ignore
         self.album_name = ""
         self.episode_number = ""
         self.upload_date = convert_date_string(info["upload_date"], "YYYY-MM-DD")
@@ -202,21 +209,21 @@ class Source:
         )
         self.file_base_path = self.root_directory / self.source_row.youtube_id
 
-    def exists(self) -> bool:
-        """
-        the download is considered to exist if the mp3 file is there.  this is the file that i name in the download command
-        need to check the directory for existence of the audio, image, and description files.  Since I wont know the name of the files after they are downloaded
-        The format will be self.id + (YYYYMMDD).
-        construct the whole path (path + name + extension)
-        list
-        check if the file exists
-        if it does
+    # def exists(self) -> bool:
+    #     """
+    #     the download is considered to exist if the mp3 file is there.  this is the file that i name in the download command
+    #     need to check the directory for existence of the audio, image, and description files.  Since I wont know the name of the files after they are downloaded
+    #     The format will be self.id + (YYYYMMDD).
+    #     construct the whole path (path + name + extension)
+    #     list
+    #     check if the file exists
+    #     if it does
 
-        """
-        if self.audio_file == "":
-            return False
-        else:
-            return os.path.exists(str(self.audio_file))
+    #     """
+    #     if self.audio_file == "":
+    #         return False
+    #     else:
+    #         return os.path.exists(str(self.audio_file))
 
     #    def full_paths(self):
     #        filetypes = ["audio", "image", "description"]
@@ -252,14 +259,14 @@ class Source:
             "--write-thumbnail",
             self.source_row.url,
         ]
-        self.logger.info("Starting download of {}", self.source_row.url)
+        self.logger.debug("Starting download of {}", self.source_row.video_title)
         yt_dl = subprocess.run(args1 + args2 + args3)
         if yt_dl.returncode:
             self.logger.error("There was an error processing {}", yt_dl.returncode)
             return False
         else:
             self.logger.success(
-                "The file was successfully downloaded:  {}", self.source_row.url
+                "The file was successfully downloaded:  {}", self.source_row.video_title
             )
             self.find_all_files()
             self.resize_image(self.source_row.image_file, 1280, 1280)

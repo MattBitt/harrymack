@@ -294,33 +294,33 @@ def get_playlist_videos(url):
         return lines
 
 
-def youtube_download(track, config):
-    # * output name should not have ".ext"
-    f = os.path.join(track.source.path, track.source.base_name + ".mp3")
-    args1 = ["yt-dlp"]
-    args2 = []
-    if not config["log_level"] == "DEBUG":
-        args2 = ["--no-warnings", "--quiet"]
-    args3 = [
-        "--extract-audio",
-        "--write-description",
-        "--audio-format",
-        "mp3",
-        "--audio-quality",
-        "0",
-        "-o",
-        f[:-4] + " (%(upload_date)s).mp3",
-        "--write-thumbnail",
-        track.url,
-    ]
-    logger.info("Starting download of {}", track.url)
-    yt_dl = subprocess.run(args1 + args2 + args3)
-    if yt_dl.returncode:
-        logger.error("There was an error processing {}", yt_dl.returncode)
-        return False
-    else:
-        logger.success("The file was successfully downloaded:  {}", track.url)
-        return True
+# def youtube_download(track, config):
+#     # * output name should not have ".ext"
+#     f = os.path.join(track.source.path, track.source.base_name + ".mp3")
+#     args1 = ["yt-dlp"]
+#     args2 = []
+#     if not config["log_level"] == "DEBUG":
+#         args2 = ["--no-warnings", "--quiet"]
+#     args3 = [
+#         "--extract-audio",
+#         "--write-description",
+#         "--audio-format",
+#         "mp3",
+#         "--audio-quality",
+#         "0",
+#         "-o",
+#         f[:-4] + " (%(upload_date)s).mp3",
+#         "--write-thumbnail",
+#         track.url,
+#     ]
+#     logger.debug("Starting download of {}", track.url)
+#     yt_dl = subprocess.run(args1 + args2 + args3)
+#     if yt_dl.returncode:
+#         logger.error("There was an error processing {}", yt_dl.returncode)
+#         return False
+#     else:
+#         logger.success("The file was successfully downloaded:  {}", track.url)
+#         return True
 
 
 # TODO: Need to do a first pass on refactor/delete function
@@ -495,14 +495,14 @@ def import_source_options(options):
 def add_video_to_db(url, options, config):
     query = SourceTbl.select().where(SourceTbl.url == url)
     if not query.exists():
-        logger.debug("Video doesn't exist in DB.  Need to create")
+        # logger.debug("Video doesn't exist in DB.  Need to create")
         try:
             source = SourceImporter(url, options, config)
             source.save_to_db()
         except FileNotFoundError:
             logger.warning("Not able to create object {}", url)
     else:
-        logger.debug("Video {} already exits", url)
+        logger.debug("Video {} already exsits", list(query)[0].video_title)
 
 def import_channels(config):
     for channel in config["channels"]:
@@ -523,7 +523,7 @@ def import_videos(config):
 def import_sources_to_db(config):
     import_channels(config)
     import_videos(config)
-    
+
 def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
     missing_sources = set()
@@ -544,9 +544,11 @@ def import_tracks_to_db(config):
             logger.debug("Track {} is new.  Adding to DB", track.track_title)
             track.save_to_db()
 
-    logger.info("Missing sources:")
-    for ms in missing_sources:
-        logger.info(ms)
+    if len(missing_sources) > 0:
+        logger.info("Missing sources:")
+
+        for ms in missing_sources:
+            logger.info(ms)
 
 
 def create_track_mp3(track, config):
@@ -567,12 +569,12 @@ def import_sources_and_tracks(config):
 
     logger.info("Importing sources to DB")
     import_sources_to_db(config)
-    logger.info("Importing specified tracks to DB")
+    logger.info("Importing manually specified tracks to DB")
     import_tracks_to_db(config)
 
 
 if __name__ == "__main__":
-    VERSION = "2.0.2"
+    VERSION = "2.0.3"
     CONFIG_PATH = "./config.yaml"
 
     config = load_config(CONFIG_PATH)
@@ -586,7 +588,6 @@ if __name__ == "__main__":
     for source in sources.do_not_exist():  # mp3 doesn't exist
         source_object = Source(source, config)
         source_object.download_files()
-
     tracks = TrackTbl
 
     for source in sources.get_split_by_silence():  # each record in db table
@@ -637,6 +638,7 @@ if __name__ == "__main__":
     logger.info(
         "Creating tracks that exist in the db but do not have an mp3 file created"
     )
+
     for track in tracks.do_not_exist():
         logger.debug("Need to create {} mp3", track.track_title)
         create_track_mp3(track, config)

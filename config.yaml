@@ -34,7 +34,7 @@ channels:
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAGLnngi0ZOTvNmuNt5uHJk
         split_by_silence: true
         separate_album_per_episode: true
-        use_episode_number: true
+        # use_episode_number: true
         video_exceptions:
           - video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
             episode_number: "065.5"

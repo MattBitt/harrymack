@@ -70,7 +70,7 @@ def get_options(url):
 # Downloads depending on the options set above
 def get_json_info(url: str) -> dict:
     ydl_opts = get_options(url)
-    info = None
+    info = {}
     if ydl_opts is not None:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -87,7 +87,7 @@ def get_json_info(url: str) -> dict:
             return info
     else:
         raise KeyError
-
+    return {}
 
 if __name__ == "__main__":
     try:

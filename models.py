@@ -63,7 +63,7 @@ class Source(BaseModel):
 
     @classmethod
     def do_not_exist(cls) -> ModelSelect:
-        result = cls.select().where(cls.audio_exists == 0)
+        result = cls.select().where(cls.audio_exists == 0, cls.ignore == False)
         return result
 
 
