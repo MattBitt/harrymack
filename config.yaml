@@ -65,6 +65,7 @@ channels:
               - Wordplay Wednesday Episode ([0-9]+)
               - Wordplay Wednesday w/ Harry Mack.*([0-9]+)
               - Wordplay Tuesday \#([0-9]+)
+
       - video_type: Omegle Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPALgw6Ko7H78WxHC3pzxeZl
         split_by_silence: false
@@ -109,24 +110,79 @@ channels:
               - 'Guerrilla Bars \(Episode ([0-9]+)'
               - "Guerrilla Bars Episode ([0-9]+)"
               - "Best of Guerrilla Bars Part ([0-9]+)"
+      
       - video_type: OG Public Freestyles
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVZCuoMVAFys0mkVvvNawA
-        split_by_silence: false
         separate_album_per_episode: false
+
       - video_type: Busking With Bose
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
-        split_by_silence: false
         separate_album_per_episode: true
         typical_video:
           - episode_number_patterns:
               - Busking With Bose Ep. ([0-9]+)
+      
       - video_type: Behind the Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPDVjUBHYPBOJYYC8sPhEILZ
-        split_by_silence: false
         separate_album_per_episode: true
         typical_video:
           - episode_number_patterns:
               - Behind The Bars ([0-9]+)
+      
+      - video_type: Live Shows
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
+        separate_album_per_episode: false
+
+      - video_type: Stream of Consciousness
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCXcXB3GQFG-kpVcsnucw1k
+        separate_album_per_episode: true
+        video_exceptions:
+          - url: "https://www.youtube.com/watch?v=izJfKZKVXNg"
+            video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
+            episode_number: "001"
+          - url: "https://www.youtube.com/watch?v=mm2v9jObAN0"
+            video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
+            episode_number: "002"
+          - url: "https://www.youtube.com/watch?v=hdAxV4_W1n8"
+            video_title: "The Last Stream Of Consciousness | Live Chat Freestyle"
+            episode_number: "039"
+        typical_video:
+          - episode_number_patterns:
+              - Stream Of Consciousness \#([0-9]+)
+      
+      - video_type: Happy Hour w/ Harry Mack LIVE
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAgM7MkLiO5CNeaaOZTZ86R
+        separate_album_per_episode: true
+        video_exceptions:
+          - url: "https://www.youtube.com/watch?v=BzbEfHqdyEk"
+            video_title: "Happy Hour With Harry Mack LIVE FT. BLIND FURY"
+            episode_number: "021"
+        typical_video:
+          - episode_number_patterns:
+              - LIVE \#([0-9]+)
+      - video_type: Rhyming Connections Off-Top Conversations With Harry Mack 
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPB0d7RFcZZlQEHQDAYUxBuz
+        separate_album_per_episode: false
+
+      - video_type: Happy Hour Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPBXWuzE5TWOEmxbAYjg4o6G
+        separate_album_per_episode: false
+        
+      - video_type: Live Stream Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAHZP4a8mtTaoA8Q4D9B8nb
+        separate_album_per_episode: false
+        
+      - video_type: Wordplay Wednesday Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPBh0ZL7TPhFS58teh09JrGU
+        separate_album_per_episode: false
+
+      - video_type: Dope Moments & Collabs
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCL-FRXUleIyt5KpS8X4MCW
+        separate_album_per_episode: false
+      
+      - video_type: Music Videos
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAzDyP5sErLt04JuOG4Jata
+        separate_album_per_episode: false
 
   - channel_name: Harry Mack Clips
     url: https://www.youtube.com/c/HarryMackClips
@@ -141,6 +197,7 @@ channels:
         url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJqDdVAuYWwjjvvFfe4xSip
         split_by_silence: false
         separate_album_per_episode: false
+
 
 # use this for individual videos not on a channel/playlist listed above
 videos:
