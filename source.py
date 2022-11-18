@@ -98,22 +98,25 @@ class SourceImporter:
                 # check if this url is listed as an exception in the yaml.
 
                 for exception in playlist["video_exceptions"]:
-                    if exception["video_title"] in self.video_title:
+                    if exception["url"] == self.url:
                         found_exception = True
                         match exception:
-                            case {"ignore": ignore}:
+                            case {"ignore": ignore, "video_title": video_title}:
                                 self.ignore = ignore
+                                self.video_title = video_title
                             case {
                                 "episode_number": episode_number,
                                 "album_name": album_name,
+                                "video_title": video_title
                             }:
                                 self.episode_number = episode_number
                                 self.album_name = album_name
-                            case {"episode_number": episode_number}:
+                                self.video_title = video_title
+                            case {"episode_number": episode_number, "video_title": video_title}:
                                 self.episode_number = episode_number
                                 self.album_name = (
-                                    self.video_type + " " + str(self.episode_number)
-                                )
+                                    self.video_type + " " + str(self.episode_number))
+                                self.video_title = video_title
                             case _:
                                 self.logger.error(
                                     "Keys not understood:  {}", exception.keys()

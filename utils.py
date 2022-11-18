@@ -20,3 +20,14 @@ def convert_date_string(dt: str, format: str) -> str:
 
 def convert_date_time_object(dt: datetime):
     return dt.strftime("%Y-%m-%d")
+
+
+def ms_to_hhmmss(millis):
+    millis = int(millis)
+    seconds = (millis / 1000) % 60
+    seconds = int(seconds)
+    minutes = (millis / (1000 * 60)) % 60
+    minutes = int(minutes)
+    hours = (millis / (1000 * 60 * 60)) % 24
+    hours = int(hours)
+    return f"{hours:02}:{minutes:02}:{seconds:02}"

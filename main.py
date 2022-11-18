@@ -290,7 +290,7 @@ def get_playlist_videos(url):
         logger.error("There was an error processing {}", yt_dl.returncode)
         return []
     else:
-        logger.success("The file was successfully downloaded:  {}", url)
+        # logger.success("The file was successfully downloaded:  {}", url)
         return lines
 
 
@@ -484,7 +484,7 @@ def import_source_options(options):
     }
     option_return = {}
     assert "video_type" in options.keys()
-    option_return["video_type"] = options["video_type"]
+    option_return = options
     for k in default_options.keys():
         if k in options.keys():
             option_return[k] = options[k]
@@ -591,6 +591,12 @@ if __name__ == "__main__":
     tracks = TrackTbl
 
     for source in sources.get_split_by_silence():  # each record in db table
+        # ! This seems crazy but this is the best idea for this project so far lol.
+        # ! stop splitting up wordplay wednesdays (maybe).  create a web interface that
+        # ! lets me "cut" music and tag it on the spot
+        # ! Ex: nonesense bars
+        # ! rewind til beginning, cut (select number of seconds before)
+        # ! what to do about after? reselect?  tie in with tags... 
         # need list of sources that need to be split by silence
         # also need to know which ones have already been created
         # TODO remove "if check" to do more than one video at a time.  wait until pydub parameters are well established

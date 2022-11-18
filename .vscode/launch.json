@@ -13,6 +13,16 @@
             "justMyCode": true,
             "internalConsoleOptions": "openOnSessionStart",
             "redirectOutput": true
+        },
+        {
+            "name": "Python: Tautulli Connector",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tautulli_connector.py",
+            // "console": "integratedTerminal",
+            "justMyCode": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            "redirectOutput": true
         }
     ]
 }

@@ -19,6 +19,9 @@ fonts:
 plex:
   baseurl: !ENV ${PLEXURL}
   token: !ENV ${PLEX}
+tautulli:
+  url: !ENV ${TAUTULLIURL}
+  api: !ENV ${TAUTULLIAPI}
 pydub:
   min_silence_len: 700 # milliseconds
   silence_thresh: -18
@@ -34,16 +37,28 @@ channels:
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAGLnngi0ZOTvNmuNt5uHJk
         split_by_silence: true
         separate_album_per_episode: true
-        # use_episode_number: true
         video_exceptions:
-          - video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
+          - url: "https://www.youtube.com/watch?v=dYIj1Zlzx9E"
+            video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
             episode_number: "065.5"
-          - video_title: The Last Wordplay Wednesday
+          - url: "https://www.youtube.com/watch?v=Cz516FvPy70"
+            video_title: The Last Wordplay Wednesday
             episode_number: "069"
-          - video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
+          - url: "https://www.youtube.com/watch?v=psGj3w2N0g4"
+            video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
             episode_number: "070"
-          - video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
+          - url: "https://www.youtube.com/watch?v=6_edGlwXCVM"
+            video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
             episode_number: "072"
+          - url: "https://www.youtube.com/watch?v=yrtXM2zzKo4" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=oqOPsX-A57Q" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=hZxiKDpribo" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
         typical_video:
           - episode_number_patterns:
               - Wordplay Wednesday \#([0-9]+)
@@ -55,15 +70,25 @@ channels:
         split_by_silence: false
         separate_album_per_episode: true
         video_exceptions:
-          - video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
+          - url: "https://www.youtube.com/watch?v=pRd_fE6rx88"
+            video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
             ignore: true
-          - video_title: The Lost Omegle Bars | Harry Mack
+          - url: "https://www.youtube.com/watch?v=tKXnmUUM-IA"
+            video_title: The Lost Omegle Bars | Harry Mack
             episode_number: ""
             album_name: The Lost Omegle Bars
-          - video_title: Pianist & Freestyle Rapper BLOW MINDS on Omegle ft. Marcus Veltri
+          - url: "https://www.youtube.com/watch?v=Z3FjhBuFKyM"
+            video_title: Pianist & Freestyle Rapper BLOW MINDS on Omegle ft. Marcus Veltri
             episode_number: "032"
             album_name: Omegle Bars 032
-          - video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+          - url: "https://www.youtube.com/watch?v=HhzHV9QD0Is"
+            video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=e0vuE0SscoE" # private omegle bars
+            video_title: "Private OB Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=E_nszQ4uTyM" # private omegle bars
+            video_title: "Private OB Video"
             ignore: true
         typical_video:
           - episode_number_patterns:
@@ -75,7 +100,8 @@ channels:
         split_by_silence: false
         separate_album_per_episode: true
         video_exceptions:
-          - video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1
+          - url: "https://www.youtube.com/watch?v=403qyaAmmnU"
+            video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1
             ignore: true
         typical_video:
           - episode_number_patterns:
