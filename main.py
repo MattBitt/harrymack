@@ -28,7 +28,7 @@ from models import database_setup
 
 from models import Track as TrackTbl
 from models import Source as SourceTbl
-
+from models import Tag, Word
 
 # TODO: Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
@@ -478,19 +478,17 @@ def get_path(path_list):
 
 
 def import_source_options(options):
-    default_options = {
-        "split_by_silence": False,
-        "separate_album_per_episode": False
-    }
+    default_options = {"split_by_silence": False, "separate_album_per_episode": False}
     option_return = {}
     assert "video_type" in options.keys()
-    option_return["video_type"] = options["video_type"]
+    option_return = options
     for k in default_options.keys():
         if k in options.keys():
             option_return[k] = options[k]
         else:
             option_return[k] = default_options[k]
     return option_return
+
 
 def add_video_to_db(url, options, config):
     query = SourceTbl.select().where(SourceTbl.url == url)
@@ -502,7 +500,8 @@ def add_video_to_db(url, options, config):
         except FileNotFoundError:
             logger.warning("Not able to create object {}", url)
     else:
-        logger.debug("Video {} already exsits", list(query)[0].video_title)
+        logger.debug("Video {} already exists", list(query)[0].video_title)
+
 
 def import_channels(config):
     for channel in config["channels"]:
@@ -523,6 +522,7 @@ def import_videos(config):
 def import_sources_to_db(config):
     import_channels(config)
     import_videos(config)
+
 
 def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
@@ -585,56 +585,27 @@ if __name__ == "__main__":
 
     sources = SourceTbl
     logger.info("Downloading source files")
-    for source in sources.do_not_exist():  # mp3 doesn't exist
+    for source in sources.do_not_exist():
         source_object = Source(source, config)
         source_object.download_files()
     tracks = TrackTbl
 
-    for source in sources.get_split_by_silence():  # each record in db table
-        # need list of sources that need to be split by silence
-        # also need to know which ones have already been created
-        # TODO remove "if check" to do more than one video at a time.  wait until pydub parameters are well established
-        if (
-            source.video_title
-            == "Celebrating 2 MILLION Subscribers - Harry Mack Live Chat Freestyle | Wordplay Wednesday #93asdf"
-        ):
-            source_object = Source(source, config)
-            num_existing_tracks = len(tracks.with_album(source.album_name))
-            track_intervals = source_object.find_tracks()
-            # print(len(track_intervals))
-            # print(track_intervals)
-            if num_existing_tracks != 0:
-                if num_existing_tracks != len(track_intervals):
-                    # should remove all tracks with this album from the db and the actual mp3s
-                    # this would mean that if the pydub parameters change, that will probably
-                    # mean a different number of tracks so it should recreate them using the new settings
-                    # ! delete_tracks_from_drive(source.album_name)
-                    # ! delete_tracks_from_db(source.album_name)
-                    pass
-                else:
-                    # this means that there are the same number of existing tracks as intervals returned
-                    # nothing to do here
-                    logger.debug(
-                        "Already {} existing tracks for {}.  Nothing to do",
-                        str(num_existing_tracks),
-                        source.album_name,
-                    )
-                    continue
-            logger.info("Creating {} tracks in DB", str(len(track_intervals)))
-            for start_time, end_time in track_intervals:
-                data_row = {}
-                data_row["Title"] = ""
-                data_row["Filename"] = ""
-                data_row["StartTime"] = start_time
-                data_row["EndTime"] = end_time
-                data_row["URL"] = source.url
-                data_row["BeatName"] = ""
-                data_row["Producer"] = ""
-                data_row["ArtistName"] = "Harry Mack"
+    track_model = tracks.select().where(tracks.id == 212)
+    track_model = track_model[0]
+    track = Track(track_model, config)
 
-                track = TrackImporter(data_row, config)
-                track.save_to_db()
-
+    # tags = ["monotone", "nonsense bars", "rhyme scheme", "dope", "dope", "POV", "asdf"]
+    # for tag in tags:
+    #     track.add_tag(tag)
+    # track.remove_tag("dope")
+    # track.remove_tag("tech nine")
+    # track.add_tag("mississippi")
+    # track.remove_tag("mississippi")
+    # track.add_word("orange")
+    # track.add_word("Matt Bittinger")
+    # track.add_word("Lindsay Furst")
+    print(track.words())
+    print(track.tags())
     logger.info(
         "Creating tracks that exist in the db but do not have an mp3 file created"
     )

@@ -14,9 +14,10 @@ from pydub_functions import split_on_silence, detect_silence
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
+from utils import create_folder
 
-
-from utils import convert_date_string, convert_date_time_object
+from utils import convert_date_string, convert_date_time_object, get_year
+from mutagen.mp4 import MP4
 
 # from models import Source as SourceTbl
 
@@ -87,6 +88,7 @@ class SourceImporter:
         self.audio_file = ""
         self.image_file = ""
         self.description_file = ""
+        self.video_file = ""
         self.split_by_silence = playlist["split_by_silence"]
         self.file_base_path = self.root_directory / self.youtube_id
         if not playlist["separate_album_per_episode"]:
@@ -98,7 +100,7 @@ class SourceImporter:
                 # check if this url is listed as an exception in the yaml.
 
                 for exception in playlist["video_exceptions"]:
-                    if exception["video_title"] in self.video_title:
+                    if exception["url"] in self.url:
                         found_exception = True
                         match exception:
                             case {"ignore": ignore}:
@@ -192,6 +194,8 @@ class SourceImporter:
             split_by_silence=self.split_by_silence,
             upload_date=self.upload_date,
             url=self.url,
+            video_exists=False,
+            video_file=self.video_file,
             video_title=self.video_title,
             video_type=self.video_type,
             youtube_id=self.youtube_id,
@@ -207,7 +211,37 @@ class Source:
         self.root_directory = Path(
             self.config[config["enviornment"]]["download_directory"]
         )
-        self.file_base_path = self.root_directory / self.source_row.youtube_id
+        # TODO  Need to rename the file.  Maybe just sanitize the video titles?
+        file_base = self.sanitize_for_file_name()
+        self.audio_folder = self.root_directory / "audio"
+        if not self.audio_folder.exists():
+            create_folder(self.audio_folder)
+        self.target_folder = self.get_target_folder()
+        if not self.target_folder.exists():
+            create_folder(self.target_folder)
+        self.audio_file_base_path = self.root_directory / "audio" / file_base
+        self.video_file_base_path = self.target_folder / file_base
+        self.audio_file = str(self.audio_file_base_path) + ".mp3"
+        self.video_file = str(self.video_file_base_path) + "-video.mp4"
+        # self.track_num = self.get_track_num()
+
+    def get_target_folder(self):
+        # this will return the folder that the video will exist in
+        # this folder should be root directory/"Harry Mack"/$albumname/
+        # albumname should be the name stored in the db if separate track per album
+        # should there be another option?
+
+        return self.root_directory / "video" / "Harry Mack" / self.source_row.video_type
+
+    def sanitize_for_file_name(self):
+        fn = self.source_row.video_title
+        return_line = ""
+        bad_characters = "$#\\\"'|?\/&"
+        for char in fn:
+            if char not in bad_characters:
+                return_line += char
+
+        return return_line
 
     # def exists(self) -> bool:
     #     """
@@ -235,27 +269,16 @@ class Source:
 
     def download_files(self) -> bool:
 
-        """
-        build yt-dlp command
-        run command
-        """
-
-        # * output name should not have ".ext"
-        # f = os.path.join(track.source.path, track.source.base_name + ".mp3")
-
         args1 = ["yt-dlp"]
         args2 = []
         if not self.config["log_level"] == "DEBUG":
             args2 = ["--no-warnings", "--quiet"]
         args3 = [
-            "--extract-audio",
+            "-f",
+            '"res:720,fps" [ext=mp4]',
             "--write-description",
-            "--audio-format",
-            "mp3",
-            "--audio-quality",
-            "0",
             "-o",
-            str(self.file_base_path) + ".mp3",
+            self.video_file,
             "--write-thumbnail",
             self.source_row.url,
         ]
@@ -268,17 +291,40 @@ class Source:
             self.logger.success(
                 "The file was successfully downloaded:  {}", self.source_row.video_title
             )
+            # TODO Need to extract audio here
+            self.convert_mp4_to_mp3()
             self.find_all_files()
+            self.write_metadata()
             self.resize_image(self.source_row.image_file, 1280, 1280)
             return True
+
+    def convert_mp4_to_mp3(self):
+        source_mp4 = self.video_file
+        target_mp3 = self.audio_file
+        # self.logger.debug("Starting extraction from {}.", self.track_row.source.url)
+        args = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            source_mp4,
+            "-hide_banner",
+            "-loglevel",
+            "warning",
+            target_mp3,
+        ]
+        self.logger.debug("ffmpeg arguments:  " + " ".join(args))
+        ffmpeg = subprocess.run(args)
+
+        if ffmpeg.returncode:
+            print(f"FFMPEG returned: {ffmpeg.returncode}.  Quitting")
+            exit(1)
 
     def find_all_files(self):
         # * these are the possible extensions to search for
         extensions = {}
-        extensions["audio"] = ["*.mp3"]
-        extensions["image"] = ["*.mp3.jpg", "*.mp3.webp", "*.jpg"]
-        extensions["description"] = ["*.mp3.description"]
-        filenames = {"audio": "", "image": "", "description": ""}
+        extensions["image"] = ["*.mp3.jpg", "*.mp3.webp", "*.jpg", "*.webp"]
+        extensions["description"] = ["*.description", "*.mp3.description"]
+        filenames = {"image": "", "description": ""}
         k: str
         ext: str
         for k, ext in extensions.items():
@@ -287,16 +333,16 @@ class Source:
                 if not f == "":
                     filenames[k] = str(f)
                     continue
-        self.source_row.audio_file = filenames["audio"]
+        self.source_row.audio_file = self.audio_file
+        self.source_row.video_file = self.video_file
         self.source_row.image_file = filenames["image"]
         self.source_row.description_file = filenames["description"]
         self.source_row.audio_exists = True
+        self.source_row.video_exists = True
         self.source_row.save()
 
     def find_file(self, pattern) -> Path | str | None:
-        search_string = str(
-            self.root_directory / (self.source_row.youtube_id + pattern)
-        )
+        search_string = str(self.video_file_base_path) + pattern
         file_list = glob.glob(search_string)
         if len(file_list) == 1:
             return file_list[0]
@@ -384,6 +430,36 @@ class Source:
         new_img = img.resize((width, height))
         new_img.save(img_path)
         return new_img
+
+    def write_metadata(self):
+        # these are examples of other tags that can be added
+        # mp4_video_tags["\xa9gen"] = Genre
+        # mp4_video_tags["aART"] = Album Artist
+        # mp4_video_tags["\xa9wrt"] = Composer
+        # mp4_video_tags["cprt"] = Copyright
+        # mp4_video_tags["desc"] = Description
+        # mp4_video_tags["disk"] = [(1, 1)]
+
+        mp4_video_tags = MP4(self.video_file)
+
+        mp4_video_tags["\xa9nam"] = self.source_row.video_title
+        mp4_video_tags["\xa9alb"] = self.source_row.album_name
+
+        mp4_video_tags["\xa9day"] = get_year(self.source_row.upload_date)
+        mp4_video_tags["\xa9ART"] = "Harry Mack"
+
+        # here, i need to put in a track number
+        # mp4_video_tags["trkn"] = [(self.track_num, 1000)]
+        mp4_video_tags.save()
+
+    def get_track_num(self):
+        if self.source_row.episode_number:
+            return int(self.source_row.episode_number)
+        else:
+            print(len(self.source_row.with_video_type(self.source_row.video_type)))
+
+            # need to query all sources that have same video type as this one
+            # increment and return that number
 
     # def split_by_silence(self):
     #     if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:

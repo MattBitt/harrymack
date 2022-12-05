@@ -156,3 +156,49 @@
 
 # ****************************************************************************************
 # Checking YouTube to get all of the videos added to the channel
+
+
+for source in sources.get_split_by_silence():  # each record in db table
+    # need list of sources that need to be split by silence
+    # also need to know which ones have already been created
+    # TODO remove "if check" to do more than one video at a time.  wait until pydub parameters are well established
+    if (
+        source.video_title
+        == "Celebrating 2 MILLION Subscribers - Harry Mack Live Chat Freestyle | Wordplay Wednesday #93asdf"
+    ):
+        source_object = Source(source, config)
+        num_existing_tracks = len(tracks.with_album(source.album_name))
+        track_intervals = source_object.find_tracks()
+        # print(len(track_intervals))
+        # print(track_intervals)
+        if num_existing_tracks != 0:
+            if num_existing_tracks != len(track_intervals):
+                # should remove all tracks with this album from the db and the actual mp3s
+                # this would mean that if the pydub parameters change, that will probably
+                # mean a different number of tracks so it should recreate them using the new settings
+                # ! delete_tracks_from_drive(source.album_name)
+                # ! delete_tracks_from_db(source.album_name)
+                pass
+            else:
+                # this means that there are the same number of existing tracks as intervals returned
+                # nothing to do here
+                logger.debug(
+                    "Already {} existing tracks for {}.  Nothing to do",
+                    str(num_existing_tracks),
+                    source.album_name,
+                )
+                continue
+        logger.info("Creating {} tracks in DB", str(len(track_intervals)))
+        for start_time, end_time in track_intervals:
+            data_row = {}
+            data_row["Title"] = ""
+            data_row["Filename"] = ""
+            data_row["StartTime"] = start_time
+            data_row["EndTime"] = end_time
+            data_row["URL"] = source.url
+            data_row["BeatName"] = ""
+            data_row["Producer"] = ""
+            data_row["ArtistName"] = "Harry Mack"
+
+            track = TrackImporter(data_row, config)
+            track.save_to_db()

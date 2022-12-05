@@ -13,6 +13,7 @@ from pydub import AudioSegment
 from pydub_functions import split_on_silence, detect_silence
 from models import Source as SourceTbl
 from models import Track as TrackTbl
+from models import Tag, Word, TrackTag, TrackWord
 
 
 # from source import Source
@@ -168,3 +169,49 @@ class Track:
     def exists(self):
         file_path = Path(self.track_row.file_path)
         return file_path.exists()
+
+    def add_tag(self, tag_str):
+        TrackTag.add_x_to_track(self.track_row, "tag", tag_str)
+
+    def remove_tag(self, tag_str):
+        TrackTag.remove_tag_from_track(self.track_row, "tag", tag_str)
+
+    def add_word(self, word_str):
+        TrackWord.add_x_to_track(self.track_row, "word", word_str)
+
+    def remove_word(self, word_str):
+        TrackWord.remove_tag_from_track(self.track_row, "word", word_str)
+
+    def words(self):
+        query = (
+            TrackWord.select(TrackWord, TrackTbl, Word)
+            .join(Word)
+            .switch(TrackWord)
+            .join(TrackTbl)
+            .where(TrackTbl.id == self.track_row.id)
+        )
+        word_list = []
+        for track_word in query.execute():
+            word_id = track_word.word_id
+            words = Word.select().where(Word.id == word_id)
+            for word in words:
+                word_list.append(word.word)
+
+        return word_list
+
+    def tags(self):
+        query = (
+            TrackTag.select(TrackTag, TrackTbl, Tag)
+            .join(Tag)
+            .switch(TrackTag)
+            .join(TrackTbl)
+            .where(TrackTbl.id == self.track_row.id)
+        )
+        tag_list = []
+        for track_tag in query.execute():
+            tag_id = track_tag.tag_id
+            tags = Tag.select().where(Tag.id == tag_id)
+            for tag in tags:
+                tag_list.append(tag.tag)
+
+        return tag_list

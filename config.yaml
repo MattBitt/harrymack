@@ -5,8 +5,8 @@ log_level: !ENV ${LOGLEVEL}
 overwrite_destination: false
 overwrite_download: false
 env_dev:
-  download_directory: ./media/downloads/
-  music_root: ./media/musicroot/
+  download_directory: /harrymack_media/downloads/
+  music_root: /harrymack_media/musicroot/
 env_prod:
   download_directory: /downloads/
   music_root: /music/
@@ -32,50 +32,75 @@ channels:
     playlists:
       - video_type: Wordplay Wednesday
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAGLnngi0ZOTvNmuNt5uHJk
-        split_by_silence: true
+        split_by_silence: false
         separate_album_per_episode: true
-        # use_episode_number: true
         video_exceptions:
-          - video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
+          - url: "https://www.youtube.com/watch?v=dYIj1Zlzx9E"
+            video_title: Harry Mack Freestyles Over 9th WONDER Beats | Wordplay Tuesday
             episode_number: "065.5"
-          - video_title: The Last Wordplay Wednesday
+          - url: "https://www.youtube.com/watch?v=Cz516FvPy70"
+            video_title: The Last Wordplay Wednesday
             episode_number: "069"
-          - video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
+          - url: "https://www.youtube.com/watch?v=psGj3w2N0g4"
+            video_title: The Return of Wordplay Wednesday - Harry Mack LIVE Chat Freestyle
             episode_number: "070"
-          - video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
+          - url: "https://www.youtube.com/watch?v=6_edGlwXCVM"
+            video_title: Birthday Wordplay Wednesday - Harry Mack Live Chat Freestyle
             episode_number: "072"
+          - url: "https://www.youtube.com/watch?v=yrtXM2zzKo4" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=oqOPsX-A57Q" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=hZxiKDpribo" # private wordplay wednesday
+            video_title: "Private WW Video"
+            ignore: true
         typical_video:
           - episode_number_patterns:
               - Wordplay Wednesday \#([0-9]+)
               - Wordplay Wednesday Episode ([0-9]+)
               - Wordplay Wednesday w/ Harry Mack.*([0-9]+)
               - Wordplay Tuesday \#([0-9]+)
+
       - video_type: Omegle Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPALgw6Ko7H78WxHC3pzxeZl
         split_by_silence: false
         separate_album_per_episode: true
         video_exceptions:
-          - video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
+          - url: "https://www.youtube.com/watch?v=pRd_fE6rx88"
+            video_title: Harry Mack - Top 50 Omegle Bars Vol. 1&2 (Official Video Album)
             ignore: true
-          - video_title: The Lost Omegle Bars | Harry Mack
+          - url: "https://www.youtube.com/watch?v=tKXnmUUM-IA"
+            video_title: The Lost Omegle Bars | Harry Mack
             episode_number: ""
             album_name: The Lost Omegle Bars
-          - video_title: Pianist & Freestyle Rapper BLOW MINDS on Omegle ft. Marcus Veltri
+          - url: "https://www.youtube.com/watch?v=Z3FjhBuFKyM"
+            video_title: Pianist & Freestyle Rapper BLOW MINDS on Omegle ft. Marcus Veltri
             episode_number: "032"
             album_name: Omegle Bars 032
-          - video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+          - url: "https://www.youtube.com/watch?v=HhzHV9QD0Is"
+            video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=e0vuE0SscoE" # private omegle bars
+            video_title: "Private OB Video"
+            ignore: true
+          - url: "https://www.youtube.com/watch?v=E_nszQ4uTyM" # private omegle bars
+            video_title: "Private OB Video"
             ignore: true
         typical_video:
           - episode_number_patterns:
               - "Omegle Bars ([0-9]+)"
               - "Omegle Bars Episode ([0-9]+)"
               - "Omegle Bars Ep. ([0-9]+)"
+      
       - video_type: Guerrilla Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPD7NJ92Jr8s8JFGdmOmMS95
         split_by_silence: false
         separate_album_per_episode: true
         video_exceptions:
-          - video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1
+          - url: "https://www.youtube.com/watch?v=403qyaAmmnU"
+            video_title: Harry Mack Freestyles Give People A Genuine Smile - Best Of Guerrilla Bars Part 1
             ignore: true
         typical_video:
           - episode_number_patterns:
@@ -83,24 +108,81 @@ channels:
               - 'Guerrilla Bars \(Episode ([0-9]+)'
               - "Guerrilla Bars Episode ([0-9]+)"
               - "Best of Guerrilla Bars Part ([0-9]+)"
+      
       - video_type: OG Public Freestyles
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVZCuoMVAFys0mkVvvNawA
-        split_by_silence: false
         separate_album_per_episode: false
+
       - video_type: Busking With Bose
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
-        split_by_silence: false
         separate_album_per_episode: true
         typical_video:
           - episode_number_patterns:
               - Busking With Bose Ep. ([0-9]+)
+      
       - video_type: Behind the Bars
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPDVjUBHYPBOJYYC8sPhEILZ
-        split_by_silence: false
         separate_album_per_episode: true
         typical_video:
           - episode_number_patterns:
               - Behind The Bars ([0-9]+)
+      
+      - video_type: Live Shows
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
+        separate_album_per_episode: false
+
+      - video_type: Stream of Consciousness
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCXcXB3GQFG-kpVcsnucw1k
+        separate_album_per_episode: true
+        video_exceptions:
+          - url: "https://www.youtube.com/watch?v=izJfKZKVXNg"
+            video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
+            episode_number: "001"
+          - url: "https://www.youtube.com/watch?v=mm2v9jObAN0"
+            video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
+            episode_number: "002"
+          - url: "https://www.youtube.com/watch?v=hdAxV4_W1n8"
+            video_title: "The Last Stream Of Consciousness | Live Chat Freestyle"
+            episode_number: "039"
+        typical_video:
+          - episode_number_patterns:
+              - Stream Of Consciousness \#([0-9]+)
+              - Stream of Consciousness \#([0-9]+)
+      
+      - video_type: Happy Hour w/ Harry Mack LIVE
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAgM7MkLiO5CNeaaOZTZ86R
+        separate_album_per_episode: true
+        video_exceptions:
+          - url: "https://www.youtube.com/watch?v=BzbEfHqdyEk"
+            video_title: "Happy Hour With Harry Mack LIVE FT. BLIND FURY"
+            episode_number: "021"
+        typical_video:
+          - episode_number_patterns:
+              - LIVE \#([0-9]+)
+      
+      - video_type: Rhyming Connections Off-Top Conversations With Harry Mack 
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPB0d7RFcZZlQEHQDAYUxBuz
+        separate_album_per_episode: false
+
+      - video_type: Happy Hour Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPBXWuzE5TWOEmxbAYjg4o6G
+        separate_album_per_episode: false
+        
+      - video_type: Live Stream Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAHZP4a8mtTaoA8Q4D9B8nb
+        separate_album_per_episode: false
+        
+      - video_type: Wordplay Wednesday Highlights
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPBh0ZL7TPhFS58teh09JrGU
+        separate_album_per_episode: false
+
+      - video_type: Dope Moments & Collabs
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCL-FRXUleIyt5KpS8X4MCW
+        separate_album_per_episode: false
+      
+      - video_type: Music Videos
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAzDyP5sErLt04JuOG4Jata
+        separate_album_per_episode: false
 
   - channel_name: Harry Mack Clips
     url: https://www.youtube.com/c/HarryMackClips
