@@ -8,8 +8,8 @@ env_dev:
   download_directory: /harrymack_media/downloads/
   music_root: /harrymack_media/musicroot/
 env_prod:
-  download_directory: /downloads/
-  music_root: /music/
+  download_directory: /sources/
+  music_root: /tracks/
 import_during_testing: true
 fonts:
   font_name: ./media/fonts/courbd.ttf
