@@ -242,32 +242,7 @@ class Source:
 
         return return_line
 
-    # def exists(self) -> bool:
-    #     """
-    #     the download is considered to exist if the mp3 file is there.  this is the file that i name in the download command
-    #     need to check the directory for existence of the audio, image, and description files.  Since I wont know the name of the files after they are downloaded
-    #     The format will be self.id + (YYYYMMDD).
-    #     construct the whole path (path + name + extension)
-    #     list
-    #     check if the file exists
-    #     if it does
-
-    #     """
-    #     if self.audio_file == "":
-    #         return False
-    #     else:
-    #         return os.path.exists(str(self.audio_file))
-
-    #    def full_paths(self):
-    #        filetypes = ["audio", "image", "description"]
-    #        files = []
-    #        for f in filetypes:
-    #            files.append((f, self.find_file(f)))
-    #        file_dict = {k: v for k, v in filetypes}
-    #        return file_dict
-
     def download_files(self) -> bool:
-
         args1 = ["yt-dlp"]
         args2 = []
         if not self.config["log_level"] == "DEBUG":
