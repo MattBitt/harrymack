@@ -54,11 +54,13 @@
 	"mounts": [
 		"source=${localEnv:HOME}/harrymack_media/downloads/',target=/harrymack_media/downloads/,type=bind,consistency=cached",
 		"source=${localEnv:HOME}/harrymack_media/musicroot/,target=/harrymack_media/musicroot/,type=bind,consistency=cached"
-	]
+	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+	// "postStartCommand": "git config --global user.email \"${localEnv:VSCODE_CONTAINER_GIT_EMAIL}\" && git config --global user.name \"${localEnv:VSCODE_CONTAINER_GIT_USER}\""
+	"postStartCommand": "git config --global user.email \"mattsbitt@gmail.com\" && git config --global user.name \"Matt Bittinger\""
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	//"remoteUser": "vscode"
 }
