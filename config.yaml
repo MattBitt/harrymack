@@ -17,8 +17,11 @@ fonts:
   init_font_size: 48
   max_font_size: 48
 plex:
-  baseurl: !ENV ${PLEXURL}
-  token: !ENV ${PLEX}
+  baseurl: "http://192.168.0.202:32400"
+  token: !ENV ${PLEXTOKEN}
+tautulli:
+  baseurl: "http://192.168.0.202:8181"
+  token: !ENV ${TAUTULLITOKEN}
 pydub:
   min_silence_len: 700 # milliseconds
   silence_thresh: -18

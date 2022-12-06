@@ -212,30 +212,30 @@ class Source:
             self.config[config["enviornment"]]["download_directory"]
         )
         file_base = self.sanitize_for_file_name()
-        self.audio_folder = self.root_directory / "audio"
+        self.audio_folder = self.get_target_folder("audio")
         if not self.audio_folder.exists():
             create_folder(self.audio_folder)
-        self.target_folder = self.get_target_folder()
+        self.target_folder = self.get_target_folder("video")
         if not self.target_folder.exists():
             create_folder(self.target_folder)
-        self.audio_file_base_path = self.root_directory / "audio" / file_base
+        self.audio_file_base_path = self.audio_folder / file_base
         self.video_file_base_path = self.target_folder / file_base
         self.audio_file = str(self.audio_file_base_path) + ".mp3"
         self.video_file = str(self.video_file_base_path) + "-video.mp4"
         # self.track_num = self.get_track_num()
 
-    def get_target_folder(self):
+    def get_target_folder(self, filetype):
         # this will return the folder that the video will exist in
         # this folder should be root directory/"Harry Mack"/$albumname/
         # albumname should be the name stored in the db if separate track per album
         # should there be another option?
 
-        return self.root_directory / "video" / "Harry Mack" / self.source_row.video_type
+        return self.root_directory / filetype / "Harry Mack" / self.source_row.video_type
 
     def sanitize_for_file_name(self):
         fn = self.source_row.video_title
         return_line = ""
-        bad_characters = r"$#\"'|?/&"
+        bad_characters = r"$#\"'|?/&🔴:"
         for char in fn:
             if char not in bad_characters:
                 return_line += char
