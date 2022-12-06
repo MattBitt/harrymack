@@ -1,4 +1,3 @@
-# from ast import AsyncFunctionDef
 
 import subprocess
 import csv
@@ -17,7 +16,8 @@ from pyaml_env import parse_config
 from pathlib import Path
 import yaml
 import random
-from WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
+
+# from unused.WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
 
 from source import SourceImporter, Source
@@ -29,8 +29,6 @@ from models import database_setup
 from models import Track as TrackTbl
 from models import Source as SourceTbl
 from models import Tag, Word
-
-# TODO: Need to add logic to tell plex to update library after scan.  Music libraries excluded from auto updates in plex
 
 # regular comment
 # * important comment is highlighted
@@ -44,8 +42,15 @@ class EmptyListError(ValueError):
     Raised to signal the fact that a list is empty.
     """
 
-
 def load_track_data(path):
+    """_summary_
+
+    Args:
+        path (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     try:
         track_info_list = import_from_csv(path)
 
@@ -73,7 +78,6 @@ def load_track_data(path):
         "Downloads directory = {}", config[config["enviornment"]]["download_directory"]
     )
     return track_info_list
-
 
 def import_from_csv(csv_name):
     if not os.path.exists(csv_name):
@@ -109,7 +113,6 @@ def import_from_csv(csv_name):
             raise KeyError(f"{f} does not exist in csv.  Please export and try again.")
     return track_info
 
-
 def load_config(config_path):
     # ? need to validate the settings here?
     # ? need to check paths as welli
@@ -136,7 +139,6 @@ def load_config(config_path):
 
     return config
 
-
 def default_config():
     return {
         "app_name": "harrymack",
@@ -159,8 +161,7 @@ def default_config():
         "plex": {"baseurl": "!ENV ${PLEXURL}", "token": "!ENV ${PLEXTOKEN}"},
     }
 
-
-def setup_logging(config):
+def setup_logging():
     logger.remove(0)
     # adds logging to stderr
     if config["log_level"] == "DEBUG":
@@ -196,7 +197,6 @@ def setup_logging(config):
 
     return logger
 
-
 def process_with_ffmpeg(track, overwrite=False):
     if track.destination_exists() and not overwrite:
         # * destination path exists and we don't want to overwrite
@@ -209,7 +209,6 @@ def process_with_ffmpeg(track, overwrite=False):
     else:
         logger.debug("File does not exist.  Need to process.")
         return True
-
 
 def download_source_file(track, overwrite=False):
     if track.source.exists() and not overwrite:
@@ -224,12 +223,10 @@ def download_source_file(track, overwrite=False):
         logger.debug("File does not exist.  Need to download.")
         return True
 
-
 def create_yaml_from_dict(default_config, config_path):
     with open(config_path, "w") as f:
         yaml.dump(default_config, f, default_flow_style=False, sort_keys=False)
     remove_single_quotes(config_path)
-
 
 def remove_single_quotes(config_path):
     with open(config_path, "r") as f:
@@ -237,7 +234,6 @@ def remove_single_quotes(config_path):
         data = data.replace("'", "")
     with open(config_path, "w") as f:
         f.write(data)
-
 
 def keep_n_lines_of_file(n, file):
     n = n + 1  # * keep n # of records.  add 1 since there is a heading row first
@@ -250,7 +246,6 @@ def keep_n_lines_of_file(n, file):
             f.truncate()
 
     return file
-
 
 def remove_random_column_from_csv(csv_path, path):
     col_to_remove = [random.randint(0, 10)]
@@ -266,7 +261,6 @@ def remove_random_column_from_csv(csv_path, path):
                     del row[col_index]
                 writer.writerow(row)
     return Path.joinpath(path, "malformed.csv")
-
 
 def get_playlist_videos(url):
     tmp_file = "playlist_videos.txt"
@@ -293,190 +287,6 @@ def get_playlist_videos(url):
         logger.success("The file was successfully downloaded:  {}", url)
         return lines
 
-
-# def youtube_download(track, config):
-#     # * output name should not have ".ext"
-#     f = os.path.join(track.source.path, track.source.base_name + ".mp3")
-#     args1 = ["yt-dlp"]
-#     args2 = []
-#     if not config["log_level"] == "DEBUG":
-#         args2 = ["--no-warnings", "--quiet"]
-#     args3 = [
-#         "--extract-audio",
-#         "--write-description",
-#         "--audio-format",
-#         "mp3",
-#         "--audio-quality",
-#         "0",
-#         "-o",
-#         f[:-4] + " (%(upload_date)s).mp3",
-#         "--write-thumbnail",
-#         track.url,
-#     ]
-#     logger.debug("Starting download of {}", track.url)
-#     yt_dl = subprocess.run(args1 + args2 + args3)
-#     if yt_dl.returncode:
-#         logger.error("There was an error processing {}", yt_dl.returncode)
-#         return False
-#     else:
-#         logger.success("The file was successfully downloaded:  {}", track.url)
-#         return True
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def extract_audio(source, destination, start_time, end_time):
-    if not os.path.exists(destination):
-        ffmpeg = subprocess.run(
-            [
-                "ffmpeg",
-                "-y",
-                "-i",
-                source,
-                "-ss",
-                start_time,
-                "-to",
-                end_time,
-                "-hide_banner",
-                "-loglevel",
-                "warning",
-                destination,
-            ]
-        )
-
-        if ffmpeg.returncode:
-            print("FFMPEG returned: {ffmpeg.returncode}.  Quitting")
-            exit()
-    else:
-        print(f"File {destination} already exists")
-
-
-# TODO: Need to do a first pass on refactor/delete function
-# def update_id3(mp3file, artist, album, title, track_num, year, img):
-
-#     audiofile = eyed3.load(mp3file)
-#     audiofile.tag.artist = artist
-#     audiofile.tag.album = album
-#     audiofile.tag.album_artist = artist
-#     audiofile.tag.title = title
-#     audiofile.tag.track_num = track_num
-#     with open(img, "rb") as f:
-#         imagedata = f.read()
-#         audiofile.tag.images.set(3, imagedata, "image/jpeg", "")
-#     audiofile.tag.recording_date = Date(year)
-#     audiofile.tag.save()
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def create_album_folder(path):
-    if not os.path.exists(path):
-        os.umask(0)
-        os.makedirs(path, mode=0o777)
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def move_file(source, destination, overwrite):
-    if os.path.exists(destination):
-        if overwrite:
-            os.remove(destination)
-        else:
-            print("Could not overwrite destination file {destination}")
-            return False
-    shutil.move(source, destination)
-    return True
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def copy_file(source, destination, overwrite=False):
-    if os.path.exists(destination):
-        if overwrite:
-            os.remove(destination)
-        else:
-            print("Could not overwrite destination file {destination}")
-            return False
-    shutil.copy(source, destination)
-    return True
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def parse_files(dir, base_filename):
-    if dir[-1] != "/":
-        dir = dir + "/"
-
-    types = ["audio", "image", "description"]
-    files = {}
-    files["audio"] = ""
-    files["image"] = ""
-    files["description"] = ""
-    # * these are the patterns downloaded from youtube.
-    patterns = {}
-    patterns["audio"] = [base_filename + "*.mp3"]
-    patterns["image"] = [
-        base_filename + "*.mp3.webp",
-        base_filename + "*.webp",
-        base_filename + "*.jpg",
-    ]
-    patterns["description"] = [base_filename + "*.mp3.description"]
-    for t in types:
-        for pattern in patterns[t]:
-            file_list = glob.glob(dir + pattern)
-            if (
-                len(file_list) == 1
-            ):  # ? This always chooses the first file returned.  Need to do any other testing here?
-                files[t] = file_list[0]
-            elif len(file_list) > 1:
-                # print(f"More than 1 file found matching the {pattern}\n{file_list}")
-                pass
-            else:
-                # print(f"No matching files found:  {pattern}\n{file_list}")
-                pass
-    year = get_year(files["audio"])
-    return files, year
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def convert_to_jpg(source, destination):
-    img = Image.open(source)
-    img.save(destination, optimize=True)
-    return destination
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def get_fonts(dir):
-    dir = add_slash(dir)
-    return os.listdir(dir)
-    # for entry in os.scandir(dir):
-    #    if entry.name.endswith('.ttf'):
-    #        yield dir + entry.name
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def add_slash(path):
-    if path[-1] != "/":
-        path = path + "/"
-    return path
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def get_year(file):
-    if file:
-        start = file.find("(")
-        return int(file[start + 1 : start + 5])
-    else:
-        print("No file given.  Please try again")
-        return False
-
-
-# TODO: Need to do a first pass on refactor/delete function
-def get_path(path_list):
-    # * this function returns whichever folder exists.  path_list should be in preference order
-    for p in path_list:
-        if os.path.exists(p):
-            p = add_slash(p)
-            return p
-    print(f"No paths found {path_list}")
-    return False
-
-
 def import_source_options(options):
     default_options = {"split_by_silence": False, "separate_album_per_episode": False}
     option_return = {}
@@ -488,7 +298,6 @@ def import_source_options(options):
         else:
             option_return[k] = default_options[k]
     return option_return
-
 
 def add_video_to_db(url, options, config):
     query = SourceTbl.select().where(SourceTbl.url == url)
@@ -502,7 +311,6 @@ def add_video_to_db(url, options, config):
     else:
         logger.debug("Video {} already exists", list(query)[0].video_title)
 
-
 def import_channels(config):
     for channel in config["channels"]:
         if "playlists" in channel.keys():
@@ -512,17 +320,14 @@ def import_channels(config):
                     options = import_source_options(playlist)
                     add_video_to_db(url, options, config)
 
-
 def import_videos(config):
     for video in config["videos"]:
         options = import_source_options(video)
         add_video_to_db(video["url"], options, config)
 
-
 def import_sources_to_db(config):
     import_channels(config)
     import_videos(config)
-
 
 def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
@@ -550,7 +355,6 @@ def import_tracks_to_db(config):
         for ms in missing_sources:
             logger.info(ms)
 
-
 def create_track_mp3(track, config):
     track_object = Track(track, config)
     try:
@@ -562,15 +366,31 @@ def create_track_mp3(track, config):
     except IndexError:
         logger.error("Error creating track {}", track.track_title)
 
-
 def import_sources_and_tracks(config):
     if not config["import_during_testing"] and config["enviornment"] == "env_dev":
         return False
 
     logger.info("Importing sources to DB")
     import_sources_to_db(config)
+    # This may no longer be needed once the tracks from the CSV are created.
     logger.info("Importing manually specified tracks to DB")
     import_tracks_to_db(config)
+
+def download_source_files():
+    sources = SourceTbl
+    logger.info("Downloading source files")
+    for source in sources.do_not_exist():
+        source_object = Source(source, config)
+        source_object.download_files()
+
+def create_missing_tracks():
+    tracks = TrackTbl
+    logger.info(
+        "Creating tracks that exist in the db but do not have an mp3 file created"
+    )
+    for track in tracks.do_not_exist():
+        logger.debug("Need to create {} mp3", track.track_title)
+        create_track_mp3(track, config)
 
 
 if __name__ == "__main__":
@@ -578,41 +398,12 @@ if __name__ == "__main__":
     CONFIG_PATH = "./config.yaml"
 
     config = load_config(CONFIG_PATH)
-    logger = setup_logging(config)
+    logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)
     database_setup()
     import_sources_and_tracks(config)
-
-    sources = SourceTbl
-    logger.info("Downloading source files")
-    for source in sources.do_not_exist():
-        source_object = Source(source, config)
-        source_object.download_files()
-    tracks = TrackTbl
-
-    track_model = tracks.select().where(tracks.id == 212)
-    track_model = track_model[0]
-    track = Track(track_model, config)
-
-    # tags = ["monotone", "nonsense bars", "rhyme scheme", "dope", "dope", "POV", "asdf"]
-    # for tag in tags:
-    #     track.add_tag(tag)
-    # track.remove_tag("dope")
-    # track.remove_tag("tech nine")
-    # track.add_tag("mississippi")
-    # track.remove_tag("mississippi")
-    # track.add_word("orange")
-    # track.add_word("Matt Bittinger")
-    # track.add_word("Lindsay Furst")
-    print(track.words())
-    print(track.tags())
-    logger.info(
-        "Creating tracks that exist in the db but do not have an mp3 file created"
-    )
-
-    for track in tracks.do_not_exist():
-        logger.debug("Need to create {} mp3", track.track_title)
-        create_track_mp3(track, config)
+    download_source_files()
+    create_missing_tracks()
     plex = connect_to_server()
     plex_update_library(plex, "Harry Mack")
     logger.success("Program finished successfully")

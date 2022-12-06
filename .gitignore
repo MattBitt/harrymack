@@ -21,3 +21,5 @@ media/fonts/couri.ttf
 logs/
 harry_mack.db
 *.db
+.pytest_cache/
+unused/*

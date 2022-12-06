@@ -211,7 +211,6 @@ class Source:
         self.root_directory = Path(
             self.config[config["enviornment"]]["download_directory"]
         )
-        # TODO  Need to rename the file.  Maybe just sanitize the video titles?
         file_base = self.sanitize_for_file_name()
         self.audio_folder = self.root_directory / "audio"
         if not self.audio_folder.exists():
@@ -236,7 +235,7 @@ class Source:
     def sanitize_for_file_name(self):
         fn = self.source_row.video_title
         return_line = ""
-        bad_characters = "$#\\\"'|?\/&"
+        bad_characters = r"$#\"'|?/&"
         for char in fn:
             if char not in bad_characters:
                 return_line += char
@@ -354,48 +353,6 @@ class Source:
             # * if the directory doesn't exist, then its not downloaded.  no need to check further
             return ""
 
-    def find_tracks(self) -> list[tuple[str, str]]:
-        pydub_config = self.config["pydub"]
-        min_silence = pydub_config["min_silence_len"]
-        silence_thr = pydub_config["silence_thresh"]
-        seek_st = pydub_config["seek_step"]
-        target_len = pydub_config["target_length"]
-        if self.source_row.audio_file == "":
-            logger.error("No audio file found.  Cannot proceed")
-            raise FileNotFoundError
-        self.logger.debug("Analyzing audio clip {}", self.source_row.audio_file)
-        whole_track = AudioSegment.from_mp3(self.source_row.audio_file)
-        # silences = self.detect_silence(whole_track)
-        chunks = detect_silence(
-            whole_track,
-            min_silence_len=min_silence,
-            silence_thresh=silence_thr,
-            seek_step=seek_st,
-        )
-        # now recombine the chunks so that the parts are at least 90 sec long
-        target_length = target_len * 1000
-        output_chunks = []
-        new_chunk = True
-        start_time = 0
-        for chunk in chunks:
-            if new_chunk:
-                start_time = chunk[0]
-            end_time = chunk[1]
-            if (end_time - start_time) > target_length:
-                output_chunks.append((start_time, end_time))
-                new_chunk = True
-            else:
-                new_chunk = False
-            # if len(output_chunks[-1]) < target_length:
-            #     output_chunks[-1] += chunk
-            # else:
-            #     # if the last output chunk is longer than the target length,
-            #     # we can start a new one
-            #     output_chunks.append(chunk)
-        output_chunks = self.convert_list_ms_to_list_start_end(output_chunks)
-
-        return output_chunks
-
     def convert_list_ms_to_list_start_end(self, chunks):
         output = []
         time_margin = 10  # ms to keep around tracks
@@ -457,48 +414,3 @@ class Source:
             return int(self.source_row.episode_number)
         else:
             print(len(self.source_row.with_video_type(self.source_row.video_type)))
-
-            # need to query all sources that have same video type as this one
-            # increment and return that number
-
-    # def split_by_silence(self):
-    #     if source.video_type in VIDEOS_TO_SPLIT_BY_SILENCE:
-    #         orig_title = id3.title
-    #         orig_filename = data_row["Filename"] + " "
-    #         track_times = source.find_tracks()
-
-    #         for tt in track_times:
-    #             data_row["StartTime"], data_row["EndTime"] = tt
-    #             time_string = f"{tt[0]}-{tt[1]}".replace(":", "")
-    #             id3.track_number = str((int(id3.track_number) + 1))
-    #             id3.title = orig_title + " " + id3.track_number
-
-    #             data_row["Filename"] = (
-    #                 orig_filename + id3.track_number + " (" + time_string + ")"
-    #             )
-    #             track = TrackImporter(data_row, config, source, id3)
-    #             if not track.exists() or (
-    #                 track.exists() and config["overwrite_destination"]
-    #             ):
-    #                 track.extract_from_source()
-    #                 track.write_id3_tags()
-
-    # def create_source_video_object(self, url: str, playlist: dict, config: dict):
-
-    #     # match playlist:
-    #     #     case {"separate_album_per_episode": true}:
-    #     #         pass
-    #     #     case {"video_exceptions": exceptions}:
-    #     #         pass
-
-    #     # if playlist["separate_album_per_episode"]:
-    #     #     if "video_exceptions" in playlist.keys():
-    #     #         for override in playlist["episode_number_overrides"]:
-    #     #             if override["title"] in info["title"]:
-    #     #                 ep_number = str(override["episode_number"])
-    #     #     if ep_number == "":
-    #     #         ep_number = get_episode_number(info["title"], playlist["patterns"]).zfill(3)
-    #     #         if ep_number == "000" or ep_number == "":
-    #     #             continue
-
-    #     return source

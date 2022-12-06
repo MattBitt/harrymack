@@ -33,7 +33,21 @@
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-python.python",
-				"ms-python.vscode-pylance"
+				"ms-python.vscode-pylance",
+				"KevinRose.vsc-python-indent",
+				"donjayamanne.python-extension-pack",
+				"ms-toolsai.jupyter",
+				"rogalmic.bash-debug",
+				"ms-python.black-formatter",
+				"ms-azuretools.vscode-docker",
+				"aaron-bond.better-comments",
+				"KevinRose.vsc-python-indent",
+				"littlefoxteam.vscode-python-test-adapter",
+				"ms-vscode.test-adapter-converter",
+				"hbenl.vscode-test-explorer",
+				"Cameron.vscode-pytest",
+				"RapidAPI.vscode-rapidapi-client",
+				"njpwerner.autodocstring"
 			]
 		}
 	},

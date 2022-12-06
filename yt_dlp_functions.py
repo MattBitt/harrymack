@@ -89,6 +89,7 @@ def get_json_info(url: str) -> dict:
         raise KeyError
     return {}
 
+
 if __name__ == "__main__":
     try:
         url = sys.argv[1]
