@@ -295,9 +295,9 @@ class Source:
         self.logger.debug("ffmpeg arguments:  " + " ".join(args))
         ffmpeg = subprocess.run(args)
 
-        if ffmpeg.returncode:
-            print(f"FFMPEG returned: {ffmpeg.returncode}.  Quitting")
-            exit(1)
+        #if ffmpeg.returncode:
+        #    print(f"FFMPEG returned: {ffmpeg.returncode}.  Quitting")
+        #    exit(1)
 
     def find_all_files(self):
         # * these are the possible extensions to search for

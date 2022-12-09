@@ -128,7 +128,7 @@ class Track:
         if not self.exists():
             args = [
                 "ffmpeg",
-                "-y",
+                "-n",
                 "-i",
                 self.track_row.source.audio_file,
                 "-ss",
@@ -143,9 +143,9 @@ class Track:
             self.logger.debug("ffmpeg arguments:  " + " ".join(args))
             ffmpeg = subprocess.run(args)
 
-            if ffmpeg.returncode:
-                print("FFMPEG returned: {ffmpeg.returncode}.  Quitting")
-                exit(1)
+            #if ffmpeg.returncode:
+            #    print("FFMPEG returned: {ffmpeg.returncode}.  Quitting")
+            #    exit(1)
         else:
             self.logger.debug(
                 "File {} already exists.  Skipping", self.track_row.file_path

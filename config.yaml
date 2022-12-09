@@ -138,12 +138,15 @@ channels:
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCXcXB3GQFG-kpVcsnucw1k
         separate_album_per_episode: true
         video_exceptions:
+          # need to add these 2 back after fixing problem with file name being the same
           - url: "https://www.youtube.com/watch?v=izJfKZKVXNg"
             video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
             episode_number: "001"
+            ignore: true
           - url: "https://www.youtube.com/watch?v=mm2v9jObAN0"
             video_title: "LIVE: Harry Mack Freestyles Using Words from the Live Chat - Stream of Consciousness"
             episode_number: "002"
+            ignore: true
           - url: "https://www.youtube.com/watch?v=hdAxV4_W1n8"
             video_title: "The Last Stream Of Consciousness | Live Chat Freestyle"
             episode_number: "039"
@@ -182,6 +185,11 @@ channels:
       - video_type: Dope Moments & Collabs
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPCL-FRXUleIyt5KpS8X4MCW
         separate_album_per_episode: false
+        video_exceptions:
+          - url: "https://www.youtube.com/watch?v=ooNd2OMWxzI"
+            video_title: "Harry Mack Freestyle"
+            ignore: true
+             
       
       - video_type: Music Videos
         url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAzDyP5sErLt04JuOG4Jata
@@ -348,26 +356,26 @@ videos:
   - video_type: Misc
     video_title: Create And Expand Your Comic Universe with Justin Jordan | Harry Mack Happy Hour
     url: https://www.youtube.com/watch?v=l-UgJGueEVo
-  - video_type: Omegle Bars UNRELEASED
-    video_title: That Was Insane WTF | Harry Mack UNRELEASED Omegle Bars
+  - video_type: Omegle Bars Unreleased
+    video_title: That Was Insane WTF | Harry Mack Unreleased Omegle Bars
     url: https://www.youtube.com/watch?v=PIAOmLzCQ2k
-  - video_type: Omegle Bars UNRELEASED
-    video_title: PewDiePie, Beast, India | Harry Mack UNRELEASED Omegle Bars
+  - video_type: Omegle Bars Unreleased
+    video_title: PewDiePie, Beast, India | Harry Mack Unreleased Omegle Bars
     url: https://www.youtube.com/watch?v=jy1emwwm-fA
-  - video_type: Omegle Bars UNRELEASED
-    video_title: Pen/Pencil, Stranger, Medicine | Harry Mack UNRELEASED Omegle Bars
+  - video_type: Omegle Bars Unreleased
+    video_title: Pen/Pencil, Stranger, Medicine | Harry Mack Unreleased Omegle Bars
     url: https://www.youtube.com/watch?v=Nf8_DBNx8SA
-  - video_type: Omegle Bars UNRELEASED
-    video_title: Milestones | Harry Mack UNRELEASED Omegle Bars
+  - video_type: Omegle Bars Unreleased
+    video_title: Milestones | Harry Mack Unreleased Omegle Bars
     url: https://www.youtube.com/watch?v=9f4ncV1jtBo
-  - video_type: Guerrilla Bars UNRELEASED
-    video_title: Pizza and Popsicles | Harry Mack UNRELEASED Guerrilla Bars
+  - video_type: Guerrilla Bars Unreleased
+    video_title: Pizza and Popsicles | Harry Mack Unreleased Guerrilla Bars
     url: https://www.youtube.com/watch?v=UrK86vWNZH0
-  - video_type: Guerrilla Bars UNRELEASED
-    video_title: A Freestyle Roller Coaster | Harry Mack UNRELEASED Guerrilla Bars
+  - video_type: Guerrilla Bars Unreleased
+    video_title: A Freestyle Roller Coaster | Harry Mack Unreleased Guerrilla Bars
     url: https://www.youtube.com/watch?v=Xq7Asa2wVtk
-  - video_type: Guerrilla Bars UNRELEASED
-    video_title: AY, AY, AY! | Harry Mack UNRELEASED Guerrilla Bars
+  - video_type: Guerrilla Bars Unreleased
+    video_title: AY, AY, AY! | Harry Mack Unreleased Guerrilla Bars
     url: https://www.youtube.com/watch?v=tZK7Q7nY4dc
   - video_type: Ignored
     video_title: Bounce on the Track - Harry Mack Freestyle (Guerrilla Bars 7)
