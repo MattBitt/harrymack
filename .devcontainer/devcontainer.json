@@ -52,8 +52,8 @@
 		}
 	},
 	"mounts": [
-		"source=${localEnv:HOME}/harrymack_media/downloads/,target=/harrymack_media/downloads/,type=bind,consistency=cached",
-		"source=${localEnv:HOME}/harrymack_media/musicroot/,target=/harrymack_media/musicroot/,type=bind,consistency=cached"
+		"source=${localEnv:HOME}/harrymack_media/downloads/,target=/sources/,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/harrymack_media/musicroot/,target=/tracks/,type=bind,consistency=cached"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": []

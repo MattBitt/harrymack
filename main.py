@@ -1,4 +1,3 @@
-
 import subprocess
 import csv
 import os
@@ -42,6 +41,7 @@ class EmptyListError(ValueError):
     Raised to signal the fact that a list is empty.
     """
 
+
 def load_track_data(path):
     """_summary_
 
@@ -79,6 +79,7 @@ def load_track_data(path):
     )
     return track_info_list
 
+
 def import_from_csv(csv_name):
     if not os.path.exists(csv_name):
         raise FileNotFoundError(f"File {csv_name} not found")
@@ -113,6 +114,7 @@ def import_from_csv(csv_name):
             raise KeyError(f"{f} does not exist in csv.  Please export and try again.")
     return track_info
 
+
 def load_config(config_path):
     # ? need to validate the settings here?
     # ? need to check paths as welli
@@ -139,6 +141,7 @@ def load_config(config_path):
 
     return config
 
+
 def default_config():
     return {
         "app_name": "harrymack",
@@ -160,6 +163,7 @@ def default_config():
         },
         "plex": {"baseurl": "!ENV ${PLEXURL}", "token": "!ENV ${PLEXTOKEN}"},
     }
+
 
 def setup_logging():
     logger.remove(0)
@@ -197,6 +201,7 @@ def setup_logging():
 
     return logger
 
+
 def process_with_ffmpeg(track, overwrite=False):
     if track.destination_exists() and not overwrite:
         # * destination path exists and we don't want to overwrite
@@ -209,6 +214,7 @@ def process_with_ffmpeg(track, overwrite=False):
     else:
         logger.debug("File does not exist.  Need to process.")
         return True
+
 
 def download_source_file(track, overwrite=False):
     if track.source.exists() and not overwrite:
@@ -223,10 +229,12 @@ def download_source_file(track, overwrite=False):
         logger.debug("File does not exist.  Need to download.")
         return True
 
+
 def create_yaml_from_dict(default_config, config_path):
     with open(config_path, "w") as f:
         yaml.dump(default_config, f, default_flow_style=False, sort_keys=False)
     remove_single_quotes(config_path)
+
 
 def remove_single_quotes(config_path):
     with open(config_path, "r") as f:
@@ -234,6 +242,7 @@ def remove_single_quotes(config_path):
         data = data.replace("'", "")
     with open(config_path, "w") as f:
         f.write(data)
+
 
 def keep_n_lines_of_file(n, file):
     n = n + 1  # * keep n # of records.  add 1 since there is a heading row first
@@ -246,6 +255,7 @@ def keep_n_lines_of_file(n, file):
             f.truncate()
 
     return file
+
 
 def remove_random_column_from_csv(csv_path, path):
     col_to_remove = [random.randint(0, 10)]
@@ -261,6 +271,7 @@ def remove_random_column_from_csv(csv_path, path):
                     del row[col_index]
                 writer.writerow(row)
     return Path.joinpath(path, "malformed.csv")
+
 
 def get_playlist_videos(url):
     tmp_file = "playlist_videos.txt"
@@ -287,6 +298,7 @@ def get_playlist_videos(url):
         logger.success("The file was successfully downloaded:  {}", url)
         return lines
 
+
 def import_source_options(options):
     default_options = {"split_by_silence": False, "separate_album_per_episode": False}
     option_return = {}
@@ -298,6 +310,7 @@ def import_source_options(options):
         else:
             option_return[k] = default_options[k]
     return option_return
+
 
 def add_video_to_db(url, options, config):
     query = SourceTbl.select().where(SourceTbl.url == url)
@@ -311,6 +324,7 @@ def add_video_to_db(url, options, config):
     else:
         logger.debug("Video {} already exists", list(query)[0].video_title)
 
+
 def import_channels(config):
     for channel in config["channels"]:
         if "playlists" in channel.keys():
@@ -320,14 +334,17 @@ def import_channels(config):
                     options = import_source_options(playlist)
                     add_video_to_db(url, options, config)
 
+
 def import_videos(config):
     for video in config["videos"]:
         options = import_source_options(video)
         add_video_to_db(video["url"], options, config)
 
+
 def import_sources_to_db(config):
     import_channels(config)
     import_videos(config)
+
 
 def import_tracks_to_db(config):
     data_rows = load_track_data(config["import_csv"])
@@ -355,6 +372,7 @@ def import_tracks_to_db(config):
         for ms in missing_sources:
             logger.info(ms)
 
+
 def create_track_mp3(track, config):
     track_object = Track(track, config)
     try:
@@ -366,6 +384,7 @@ def create_track_mp3(track, config):
     except IndexError:
         logger.error("Error creating track {}", track.track_title)
 
+
 def import_sources_and_tracks(config):
     if not config["import_during_testing"] and config["enviornment"] == "env_dev":
         return False
@@ -376,12 +395,14 @@ def import_sources_and_tracks(config):
     logger.info("Importing manually specified tracks to DB")
     import_tracks_to_db(config)
 
+
 def download_source_files():
     sources = SourceTbl
     logger.info("Downloading source files")
     for source in sources.do_not_exist():
         source_object = Source(source, config)
         source_object.download_files()
+
 
 def create_missing_tracks():
     tracks = TrackTbl
@@ -393,15 +414,80 @@ def create_missing_tracks():
         create_track_mp3(track, config)
 
 
+def verify_files_exist():
+    sources = SourceTbl
+    logger.info("Downloading source files")
+    total_counter = 0
+    exist_counter = 0
+    does_not_exist_counter = 0
+    for source in sources.all():
+        files = [
+            source.audio_file,
+            source.description_file,
+            source.image_file,
+            source.video_file,
+        ]
+        for file in files:
+            if not file:
+                continue
+            f = Path(file)
+            total_counter += 1
+            if not f.exists():
+                does_not_exist_counter += 1
+                # logger.error("File {} does not exist", str(f))
+            else:
+                exist_counter += 1
+                # logger.success("File {} does exist", str(f))
+    logger.info("Total files checked: {}", str(total_counter))
+    logger.info("Total files Exist: {}", str(exist_counter))
+    logger.info("Total files Do Not exist: {}", str(does_not_exist_counter))
+
+def get_video_list_from_channel(url):
+    tmp_file = "channel_videos.txt"
+    
+    # yt-dlp  "%(title)s" "URL" > Videos.txt
+    args1 = ["yt-dlp"]
+    args2 = []
+    if not config["log_level"] == "DEBUG":
+        args2 = ["--no-warnings", "--quiet"]
+    args3 = [
+        "--flat-playlist",
+        "--print-to-file",
+        "%(url)s",
+        tmp_file,
+        url,
+    ]
+    yt_dl = subprocess.run(args1 + args2 + args3)
+    source = SourceTbl
+    with open(tmp_file) as f:
+        lines = f.read().splitlines()
+    os.remove(tmp_file)
+    if yt_dl.returncode:
+        logger.error("There was an error processing {}", yt_dl.returncode)
+        return []
+    else:
+        logger.success("The file was successfully downloaded:  {}", url)
+
+    with open("channel_urls.txt", "w") as channel:
+        channel_urls = lines
+        for ch_url in channel_urls:
+            if not ch_url == "NA":
+                result = source.select().where(SourceTbl.url == ch_url)
+                if not result:
+                    channel.writelines(ch_url)
+                    channel.write("\n")
+    return lines
+
 if __name__ == "__main__":
     VERSION = "2.0.3"
     CONFIG_PATH = "./config.yaml"
-
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)
     database_setup()
+    get_video_list_from_channel("https://www.youtube.com/@HarryMack")
     import_sources_and_tracks(config)
+    verify_files_exist()
     download_source_files()
     create_missing_tracks()
     plex = connect_to_server()

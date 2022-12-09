@@ -91,6 +91,10 @@ class SourceImporter:
         self.video_file = ""
         self.split_by_silence = playlist["split_by_silence"]
         self.file_base_path = self.root_directory / self.youtube_id
+        if "ignore" in playlist.keys():
+            self.album_name = self.video_type
+            self.episode_number = ""
+            self.ignore = playlist["ignore"]
         if not playlist["separate_album_per_episode"]:
             self.album_name = self.video_type
             self.episode_number = ""
@@ -230,7 +234,9 @@ class Source:
         # albumname should be the name stored in the db if separate track per album
         # should there be another option?
 
-        return self.root_directory / filetype / "Harry Mack" / self.source_row.video_type
+        return (
+            self.root_directory / filetype / "Harry Mack" / self.source_row.video_type
+        )
 
     def sanitize_for_file_name(self):
         fn = self.source_row.video_title
@@ -278,7 +284,7 @@ class Source:
         # self.logger.debug("Starting extraction from {}.", self.track_row.source.url)
         args = [
             "ffmpeg",
-            "-y",
+            "-n",
             "-i",
             source_mp4,
             "-hide_banner",
@@ -321,6 +327,7 @@ class Source:
         if len(file_list) == 1:
             return file_list[0]
         elif len(file_list) > 1:
+            
             self.logger.debug(
                 "Too many files found: %s", os.listdir(self.root_directory)
             )

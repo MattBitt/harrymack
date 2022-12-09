@@ -5,12 +5,12 @@ log_level: !ENV ${LOGLEVEL}
 overwrite_destination: false
 overwrite_download: false
 env_dev:
-  download_directory: /harrymack_media/downloads/
-  music_root: /harrymack_media/musicroot/
+  download_directory: /sources/
+  music_root: /tracks/
 env_prod:
   download_directory: /sources/
   music_root: /tracks/
-import_during_testing: true
+import_during_testing: false
 fonts:
   font_name: ./media/fonts/courbd.ttf
   font_sample: false
@@ -131,7 +131,7 @@ channels:
               - Behind The Bars ([0-9]+)
       
       - video_type: Live Shows
-        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAVe4uNYJZvgkSFk9jKpW1t
+        url: https://www.youtube.com/playlist?list=PLtbrIhAJmrPAcktPEn7PgQO0yn8bmKeTJ
         separate_album_per_episode: false
 
       - video_type: Stream of Consciousness
@@ -200,6 +200,57 @@ channels:
         url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJqDdVAuYWwjjvvFfe4xSip
         split_by_silence: false
         separate_album_per_episode: false
+      - video_type: Guerrilla Bars Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zKRXGaCmeBHoq-Td40GQU67
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Omegle Bars Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zIcBwxMKSBgtByiP6qhC84J
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Busking With Bose Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJm10Pb88HWLFgGhTDGW0BE
+        separate_album_per_episode: false
+        ignore: true
+      # not sure if i should ignore these or not
+      - video_type: Energy Exchange 2022
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zLXQfWviOhqiOdvTp5MYbZZ
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Harry Mack Shorts
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJQcrnv5G9L1n3v4xOuRhj7
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Live Show Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJyN425vIieKSkWWy6U9qVB
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Marc and Mack
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zKaw65CQ-hmvM-8u0J3QCBM
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Behind The Bars
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zLqq_g0D44cKCE0xEmenRUQ
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Educational Content
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJnQxmSVV_Hh-pqXZS3hVwU
+        separate_album_per_episode: false
+        ignore: true
+      - video_type: Mack Talk
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zJ-jTzCIDEawC7FuvD5X46x
+        separate_album_per_episode: false
+        ignore: true      
+      - video_type: Live Chat Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zL7CkgfIfr52ZOy8CXRnwVT
+        separate_album_per_episode: false
+        ignore: true      
+      - video_type: Happy Hour Clips
+        url: https://www.youtube.com/playlist?list=PLVuktCy_G9zLQwCsQi8mTxqzw6cl47aRH
+        separate_album_per_episode: false
+        ignore: true      
+      
+
 
 # use this for individual videos not on a channel/playlist listed above
 videos:
@@ -219,3 +270,275 @@ videos:
     url: https://www.youtube.com/watch?v=RDwhRhbLT4w
   - video_type: "Happy Hour Clips"
     url: https://www.youtube.com/watch?v=cnukKeC_phA
+  - video_type: Misc
+    video_title: Soulja Boy Reacts to Insane Harry Mack Freestyles
+    url: https://www.youtube.com/watch?v=QOmCunAWMKw
+  - video_type: Misc
+    video_title: 'Amen Brother: Harry Mack Freestyles Over Classic Drum Breaks'
+    url: https://www.youtube.com/watch?v=bYq7v3lVUJA
+  - video_type: Misc
+    video_title: Epic Live Freestyles For HYPE Vegas Crowd
+    url: https://www.youtube.com/watch?v=KB0Q9Eivrh4
+  - video_type: Misc
+    video_title: How To Get Better At Freestyle Rapping - Setup, Punchline
+    url: https://www.youtube.com/watch?v=KP5kZreliBI
+  - video_type: Misc
+    video_title: WEEKLY ROUNDUP | Emmy's, FaceApp, Neuralink
+    url: https://www.youtube.com/watch?v=QQzyOgmsjm8
+  - video_type: Misc
+    video_title: Harry Mack Freestyle with Word Randomizer - "GIRL OF MY DREAMS"
+    url: https://www.youtube.com/watch?v=LoI8Xjzbx2s
+  - video_type: Misc
+    video_title: Harry Mack RapScript Freestyle
+    url: https://www.youtube.com/watch?v=nY6ZyAzH0vI
+  - video_type: Misc
+    video_title: Harry Mack - Float Away
+    url: https://www.youtube.com/watch?v=XC4VolfsXZc
+  - video_type: Misc
+    video_title: Harry Mack Alvarado Freestyle
+    url: https://www.youtube.com/watch?v=YFgPVNRgfyk
+  - video_type: Misc
+    video_title: Harry Mack Freestyles from Randomlists.com
+    url: https://www.youtube.com/watch?v=fYFiBJVbdf8
+  - video_type: Misc
+    video_title: Incendiary, Petrichor, Dine and Dash | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=-TW-VXW0sak
+  - video_type: Misc
+    video_title: Freestyles For All Ages | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=A4UYtg41-Ok
+  - video_type: Misc
+    video_title: Crazy Cadences | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=-cGAFQUwS4A
+  - video_type: Misc
+    video_title: Stones and Crystals - Harry Mack Freestyle (MFer Jones)
+    url: https://www.youtube.com/watch?v=j8zOKk28khY
+  - video_type: Misc
+    video_title: The Nation | Harry Mack Freestyle on Knox Hill and Stevie Knight Podcast
+    url: https://www.youtube.com/watch?v=WBFMnjhj2yU
+  - video_type: Misc
+    video_title: Harry Mack Guesses Items BLINDFOLDED... While Freestyling
+    url: https://www.youtube.com/watch?v=NHgZUZdVkTc
+  - video_type: Misc
+    video_title: Joe Rogan | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=F_n0TwM_bBM
+  - video_type: Misc
+    video_title: Paperless Cartoghraphy | Harry Mack x DuaneTV
+    url: https://www.youtube.com/watch?v=WRJP2eiPaLo
+  - video_type: Misc
+    video_title: Self Love And Positivity | Harry Mack x LayedBakDFR
+    url: https://www.youtube.com/watch?v=zoGZS35zsUI
+  - video_type: Misc
+    video_title: Practice Makes Permanent, Passion vs. Talent, Work Life Balance | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=Xk9Nf1xJnLo
+  - video_type: Misc
+    video_title: What Is A Freestyle? | Harry Mack x Andrew Santino
+    url: https://www.youtube.com/watch?v=uYSrZGnonJc
+  - video_type: Misc
+    video_title: Human Psychology, Super Mario Bros, Uruguay | Harry Mack Freestyle
+    url: https://www.youtube.com/watch?v=KpeHiITV5qs
+  - video_type: Misc
+    video_title: How I Got Into Hip Hop | Harry Mack x Andrew Santino
+    url: https://www.youtube.com/watch?v=AMKR9kzLZtE
+  - video_type: Misc
+    video_title: Fast Forward | Harry Mack Live In Washington D.C.
+    url: https://www.youtube.com/watch?v=FXS5RSJACcQ
+  - video_type: Misc
+    video_title: A New Recipe | Harry Mack Freestyle Busking In Santa Monica
+    url: https://www.youtube.com/watch?v=zvdujAEtmgQ
+  - video_type: Misc
+    video_title: Create And Expand Your Comic Universe with Justin Jordan | Harry Mack Happy Hour
+    url: https://www.youtube.com/watch?v=l-UgJGueEVo
+  - video_type: Omegle Bars UNRELEASED
+    video_title: That Was Insane WTF | Harry Mack UNRELEASED Omegle Bars
+    url: https://www.youtube.com/watch?v=PIAOmLzCQ2k
+  - video_type: Omegle Bars UNRELEASED
+    video_title: PewDiePie, Beast, India | Harry Mack UNRELEASED Omegle Bars
+    url: https://www.youtube.com/watch?v=jy1emwwm-fA
+  - video_type: Omegle Bars UNRELEASED
+    video_title: Pen/Pencil, Stranger, Medicine | Harry Mack UNRELEASED Omegle Bars
+    url: https://www.youtube.com/watch?v=Nf8_DBNx8SA
+  - video_type: Omegle Bars UNRELEASED
+    video_title: Milestones | Harry Mack UNRELEASED Omegle Bars
+    url: https://www.youtube.com/watch?v=9f4ncV1jtBo
+  - video_type: Guerrilla Bars UNRELEASED
+    video_title: Pizza and Popsicles | Harry Mack UNRELEASED Guerrilla Bars
+    url: https://www.youtube.com/watch?v=UrK86vWNZH0
+  - video_type: Guerrilla Bars UNRELEASED
+    video_title: A Freestyle Roller Coaster | Harry Mack UNRELEASED Guerrilla Bars
+    url: https://www.youtube.com/watch?v=Xq7Asa2wVtk
+  - video_type: Guerrilla Bars UNRELEASED
+    video_title: AY, AY, AY! | Harry Mack UNRELEASED Guerrilla Bars
+    url: https://www.youtube.com/watch?v=tZK7Q7nY4dc
+  - video_type: Ignored
+    video_title: Bounce on the Track - Harry Mack Freestyle (Guerrilla Bars 7)
+    url: https://www.youtube.com/watch?v=oCJwU_ygw-c
+    ignore: true
+  - video_type: Ignored
+    video_title: From L.A. To Brazil - Harry Mack Freestyle (Omegle Bars 11)
+    url: https://www.youtube.com/watch?v=V8Ter8HwBZ0
+    ignore: true
+  - video_type: Ignored
+    video_title: London Rivers - Harry Mack Freestyle (Omegle Bars 4)
+    url: https://www.youtube.com/watch?v=1ZDZIe56CbQ
+    ignore: true
+  - video_type: Ignored
+    video_title: Crackin They Egg - Harry Mack Freestyle (Guerrilla Bars 12)
+    url: https://www.youtube.com/watch?v=x-MSob1VorA
+    ignore: true
+  - video_type: Ignored
+    video_title: Pain, Betrayal, and Love - Harry Mack Freestyle (Omegle Bars 7)
+    url: https://www.youtube.com/watch?v=8uHjTs9uyNQ
+    ignore: true
+  - video_type: Ignored
+    video_title: Dope Smokey Vibes - Harry Mack Freestyle (Omegle Bars 23)
+    url: https://www.youtube.com/watch?v=EG9V5FCPGow
+    ignore: true
+  - video_type: Ignored
+    video_title: The Rapping Engineer | Harry Mack Freestyle (The Lost Omegle Bars)
+    url: https://www.youtube.com/watch?v=5zuQ8j70cr4
+    ignore: true
+  - video_type: Ignored
+    video_title: Skating On The Beat | Harry Mack Freestyle (Guerrilla Bars 19)
+    url: https://www.youtube.com/watch?v=uzDtrJwZ4ZQ
+    ignore: true
+  - video_type: Ignored
+    video_title: Cup Half Full | Harry Mack Freestyle (Omegle Bars 55)
+    url: https://www.youtube.com/watch?v=oL0f8ym4xbs
+    ignore: true
+  - video_type: Ignored
+    video_title: Hurry Up And Rap! | Harry Mack Freestyle (Guerrilla Bars 19)
+    url: https://www.youtube.com/watch?v=R9LS4NXlKV8
+    ignore: true
+  - video_type: Ignored
+    video_title: Love Yourself | Harry Mack Freestyle (The Lost Omegle Bars)
+    url: https://www.youtube.com/watch?v=GnbJEMRXoXY
+    ignore: true
+  - video_type: Ignored
+    video_title: How Could I Forget? | Harry Mack Freestyle (Guerrilla Bars 18)
+    url: https://www.youtube.com/watch?v=-aRH5ugVXWk
+    ignore: true
+  - video_type: Ignored
+    video_title: Broken | Harry Mack Freestyle (Omegle Bars 54)
+    url: https://www.youtube.com/watch?v=WwcgaZ5Y2Bc
+    ignore: true
+  - video_type: Ignored
+    video_title: Preposterous, Poignant, Dubious | Harry Mack Freestyle (Omegle Bars 52)
+    url: https://www.youtube.com/watch?v=Sw_TrgKTw0U
+    ignore: true
+  - video_type: Ignored
+    video_title: Super Fly | Harry Mack Freestyle (Guerrilla Bars 10)
+    url: https://www.youtube.com/watch?v=Uwm9adTVvt4
+    ignore: true
+  - video_type: Ignored
+    video_title: Rhythmic Transposition 101
+    url: https://www.youtube.com/watch?v=Us4hJ-t8CI8
+    ignore: true
+  - video_type: Ignored
+    video_title: The Freestyle That Got Me Knighted | Harry Mack Freestyle (Omegle Bars 47)
+    url: https://www.youtube.com/watch?v=RyPj7zkzQy0
+    ignore: true
+  - video_type: Ignored
+    video_title: The Freestyle Encyclopedia | Harry Mack Freestyle (Omegle Bars 54)
+    url: https://www.youtube.com/watch?v=AYPdyvg0_y4
+    ignore: true
+  - video_type: Ignored
+    video_title: 3 Charizards | Harry Mack Freestyle (Omegle Bars 25)
+    url: https://www.youtube.com/watch?v=L2yawhIQuEg
+    ignore: true
+  - video_type: Ignored
+    video_title: Flippin Out | Harry Mack Freestyle (Omegle Bars 21)
+    url: https://www.youtube.com/watch?v=hX31eFWe91g
+    ignore: true
+  - video_type: Ignored
+    video_title: Y2K (Hot Tub) | Harry Mack Freestyle (Omegle Bars 30)
+    url: https://www.youtube.com/watch?v=GsUcN5WVe1I
+    ignore: true
+  - video_type: Ignored
+    video_title: HARRY MACK LIVE SHOW ANNOUNCEMENT!!!
+    url: https://www.youtube.com/watch?v=aVeyMb87sDY
+    ignore: true
+  - video_type: Ignored
+    video_title: UCLA vs USC | Harry Mack Freestyle (Guerrilla Bars 8)
+    url: https://www.youtube.com/watch?v=4FK7KLqJiw4
+    ignore: true
+  - video_type: Ignored
+    video_title: Get You High (THC) | Harry Mack Freestyle (Omegle Bars 31)
+    url: https://www.youtube.com/watch?v=MeXKGK5JU2E
+    ignore: true
+  - video_type: Ignored
+    video_title: Dog, Hair, Books | Harry Mack Freestyle (Omegle Bars 36)
+    url: https://www.youtube.com/watch?v=iXcEjCIgA0A
+    ignore: true
+  - video_type: Ignored
+    video_title: Ariana Grande | Harry Mack Freestyle (Omegle Bars 16)
+    url: https://www.youtube.com/watch?v=XxiEQ_Ka3Do
+    ignore: true
+  - video_type: Ignored
+    video_title: Leaked Lyrics | Harry Mack Freestyle (Omegle Bars 8)
+    url: https://www.youtube.com/watch?v=k-IOxKkkxrI
+    ignore: true
+  - video_type: Ignored
+    video_title: Mamba Mentality | Harry Mack Freestyle (Guerrilla Bars 13)
+    url: https://www.youtube.com/watch?v=qb2n0IchruI
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack - Best Of Omegle Bars Vol. 3 (Official Video Album)
+    url: https://www.youtube.com/watch?v=HhzHV9QD0Is
+    ignore: true
+  - video_type: Ignored
+    video_title: Best Harry Mack Freestyles Of 2021
+    url: https://www.youtube.com/watch?v=GtatjijvT4M
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack REACTS To EPIC 7 Minute One-Take Freestyle - Guerrilla Bars 10
+    url: https://www.youtube.com/watch?v=Kb_xkJ43a34
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack Reacts To His Most Viral Omegle Bars - Freestyles Across The World
+    url: https://www.youtube.com/watch?v=QRWM_feM-HQ
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack 2021 Vision | Important Announcements for the New Year
+    url: https://www.youtube.com/watch?v=bR0C_FUqrzc
+    ignore: true
+  - video_type: Ignored
+    video_title: Best Harry Mack Freestyles Of 2020
+    url: https://www.youtube.com/watch?v=BBXyI8Mnu9k
+    ignore: true
+  - video_type: Ignored
+    video_title: HARRY MACK - NEXT GEAR (OFFICIAL AUDIO)
+    url: https://www.youtube.com/watch?v=fhAHkG_mKgo
+    ignore: true
+  - video_type: Ignored
+    video_title: HARRY MACK - WORKIN' (OFFICIAL AUDIO)
+    url: https://www.youtube.com/watch?v=8E4hWk7MsnU
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack - Not Ready (Official Audio)
+    url: https://www.youtube.com/watch?v=4JXMnSnyXOs
+    ignore: true
+  - video_type: Ignored
+    video_title: Harry Mack - Proof (Official Audio)
+    url: https://www.youtube.com/watch?v=rOaqCERmlm8
+    ignore: true
+  - video_type: Ignored
+    video_title: Flow Arpeggio | Harry Mack Live In Kansas City
+    url: https://www.youtube.com/watch?v=SLEq9KW0aNU
+    ignore: true
+  - video_type: Ignored
+    video_title: Lickety-Split | Harry Mack Freestyle Busking In Santa Monica
+    url: https://www.youtube.com/watch?v=bKQjEaYpGiE
+    ignore: true
+  - video_type: Ignored
+    video_title: Mt. Rushmore Of Hip Hop | Harry Mack Live In Kansas City
+    url: https://www.youtube.com/watch?v=5HsplkKjYfg
+    ignore: true
+  - video_type: Ignored
+    video_title: 90 til Infinity | Harry Mack Live In Salt Lake City
+    url: https://www.youtube.com/watch?v=eA85aJpS_LY
+    ignore: true
+
+  
+
+
+  
