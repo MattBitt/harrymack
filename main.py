@@ -278,7 +278,7 @@ def remove_random_column_from_csv(csv_path, path):
     return Path.joinpath(path, "malformed.csv")
 
 
-def get_playlist_videos(url):
+def get_playlist_videos(playlist):
     tmp_file = "playlist_videos.txt"
     args1 = ["yt-dlp"]
     args2 = []
@@ -290,7 +290,7 @@ def get_playlist_videos(url):
         "--print-to-file",
         "url",
         tmp_file,
-        url,
+        playlist['url'],
     ]
     yt_dl = subprocess.run(args1 + args2 + args3)
     with open(tmp_file) as f:
@@ -300,7 +300,7 @@ def get_playlist_videos(url):
         logger.error("There was an error processing {}", yt_dl.returncode)
         return []
     else:
-        logger.success("The file was successfully downloaded:  {}", url)
+        logger.success("The URLs for playlist {} were downloaded.", playlist['video_type'])
         return lines
 
 
@@ -334,7 +334,7 @@ def import_channels(config):
     for channel in config["channels"]:
         if "playlists" in channel.keys():
             for playlist in channel["playlists"]:
-                urls = get_playlist_videos(playlist["url"])
+                urls = get_playlist_videos(playlist)
                 for url in urls:
                     options = import_source_options(playlist)
                     add_video_to_db(url, options, config)
@@ -467,7 +467,7 @@ def get_video_list_from_channel(url):
         "--print-to-file",
         "%(url)s",
         tmp_file,
-        url['url'],
+        url["url"],
     ]
     yt_dl = subprocess.run(args1 + args2 + args3)
     source = SourceTbl
@@ -478,7 +478,7 @@ def get_video_list_from_channel(url):
         logger.error("There was an error processing {}", yt_dl.returncode)
         return []
     else:
-        logger.success("The URLs for {} were downloaded.", url['url'])
+        logger.success("The URLs for channel {} were downloaded.", url["channel_name"])
     url_list = []
     # ! Need to stop writing these to a file since I'm using the "stats" to track it
     with open("missing_urls.txt", "w") as channel:
@@ -492,7 +492,7 @@ def get_video_list_from_channel(url):
                     channel.writelines(ch_url)
                     channel.write("\n")
     os.remove("missing_urls.txt")
-    stats["on_channel_but_not_in_db " + url['url']] = url_list  # type: ignore
+    stats["on_channel_but_not_in_db " + url["url"]] = url_list  # type: ignore
     return lines
 
 
@@ -503,12 +503,11 @@ def write_stats_to_file(stats_file):
 
 def check_for_missing_videos():
     # need to add this as well once yt-dlp is fixed:
-    # not sure where it should be exactly? 
-    # ("https://www.youtube.com/@HarryMack/streams")    
+    # not sure where it should be exactly?
+    # ("https://www.youtube.com/@HarryMack/streams")
     channels = config["channels"]
     for channel in channels:
         get_video_list_from_channel(channel)
-
 
 
 if __name__ == "__main__":
