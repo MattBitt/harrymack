@@ -10,7 +10,7 @@ env_dev:
 env_prod:
   download_directory: /sources/
   music_root: /tracks/
-import_during_testing: true
+import_during_testing: false
 fonts:
   font_name: ./media/fonts/courbd.ttf
   font_sample: false

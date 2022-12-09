@@ -290,7 +290,7 @@ def get_playlist_videos(playlist):
         "--print-to-file",
         "url",
         tmp_file,
-        playlist['url'],
+        playlist["url"],
     ]
     yt_dl = subprocess.run(args1 + args2 + args3)
     with open(tmp_file) as f:
@@ -300,7 +300,9 @@ def get_playlist_videos(playlist):
         logger.error("There was an error processing {}", yt_dl.returncode)
         return []
     else:
-        logger.success("The URLs for playlist {} were downloaded.", playlist['video_type'])
+        logger.success(
+            "The URLs for playlist {} were downloaded.", playlist["video_type"]
+        )
         return lines
 
 
@@ -399,6 +401,7 @@ def import_sources_and_tracks(config):
     # This may no longer be needed once the tracks from the CSV are created.
     logger.info("Importing manually specified tracks to DB")
     import_tracks_to_db(config)
+    check_for_missing_videos()
 
 
 def download_source_files():
@@ -501,6 +504,32 @@ def write_stats_to_file(stats_file):
         json.dump(stats, write_file, indent=4, sort_keys=False)
 
 
+def check_for_files_not_in_db():
+    global stats
+    sources = SourceTbl
+
+    rootdir = Path(config[config["enviornment"]]["download_directory"])
+    # For absolute paths instead of relative the current dir
+    file_list = [str(f) for f in rootdir.resolve().glob("**/*") if f.is_file()]
+    # print(file_list)
+    stats["files_exist_but_not_in_db"] = []
+    for file in file_list:
+        if ".mp3" in file:
+            query = sources.select().where(sources.audio_file == file)
+        elif "description" in file:
+            query = sources.select().where(sources.description_file == file)
+        elif "webp" in file or "jpg" in file:
+            query = sources.select().where(sources.image_file == file)
+        elif ".mp4" in file:
+            query = sources.select().where(sources.video_file == file)
+        else:
+            query = None
+            logger.info("{} not found above", file)
+        
+        if not query:
+            stats["files_exist_but_not_in_db"].append(file)
+
+
 def check_for_missing_videos():
     # need to add this as well once yt-dlp is fixed:
     # not sure where it should be exactly?
@@ -519,7 +548,7 @@ if __name__ == "__main__":
     logger.success("Starting Program ({})", VERSION)
     database_setup()
     import_sources_and_tracks(config)
-    check_for_missing_videos()
+    check_for_files_not_in_db()
     verify_files_exist()
     download_source_files()
     create_missing_tracks()
