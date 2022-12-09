@@ -15,6 +15,7 @@ from pyaml_env import parse_config
 from pathlib import Path
 import yaml
 import random
+import json
 
 # from unused.WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
@@ -34,6 +35,10 @@ from models import Tag, Word
 # ! alert!!!
 # ? for questions
 # TODO: this is how to add TODOs
+
+# this is a global dict to keep track of any stats throughout the program
+# such as: files that don't exist, urls on channel not in db...
+stats = {}
 
 
 class EmptyListError(ValueError):
@@ -415,6 +420,9 @@ def create_missing_tracks():
 
 
 def verify_files_exist():
+    global stats
+    stats["in_db_but_do_not_exist"] = []  # type: ignore
+
     sources = SourceTbl
     logger.info("Downloading source files")
     total_counter = 0
@@ -428,12 +436,13 @@ def verify_files_exist():
             source.video_file,
         ]
         for file in files:
-            if not file:
+            if not file or file == "None":
                 continue
             f = Path(file)
             total_counter += 1
             if not f.exists():
                 does_not_exist_counter += 1
+                stats["in_db_but_do_not_exist"].append(file)
                 # logger.error("File {} does not exist", str(f))
             else:
                 exist_counter += 1
@@ -442,9 +451,12 @@ def verify_files_exist():
     logger.info("Total files Exist: {}", str(exist_counter))
     logger.info("Total files Do Not exist: {}", str(does_not_exist_counter))
 
+
 def get_video_list_from_channel(url):
+    global stats
+
     tmp_file = "channel_videos.txt"
-    
+
     # yt-dlp  "%(title)s" "URL" > Videos.txt
     args1 = ["yt-dlp"]
     args2 = []
@@ -455,7 +467,7 @@ def get_video_list_from_channel(url):
         "--print-to-file",
         "%(url)s",
         tmp_file,
-        url,
+        url['url'],
     ]
     yt_dl = subprocess.run(args1 + args2 + args3)
     source = SourceTbl
@@ -466,30 +478,54 @@ def get_video_list_from_channel(url):
         logger.error("There was an error processing {}", yt_dl.returncode)
         return []
     else:
-        logger.success("The file was successfully downloaded:  {}", url)
-
-    with open("channel_urls.txt", "w") as channel:
+        logger.success("The URLs for {} were downloaded.", url['url'])
+    url_list = []
+    # ! Need to stop writing these to a file since I'm using the "stats" to track it
+    with open("missing_urls.txt", "w") as channel:
         channel_urls = lines
         for ch_url in channel_urls:
             if not ch_url == "NA":
                 result = source.select().where(SourceTbl.url == ch_url)
+
                 if not result:
+                    url_list.append({"url": ch_url})
                     channel.writelines(ch_url)
                     channel.write("\n")
+    os.remove("missing_urls.txt")
+    stats["on_channel_but_not_in_db " + url['url']] = url_list  # type: ignore
     return lines
 
+
+def write_stats_to_file(stats_file):
+    with open(stats_file, "w") as write_file:
+        json.dump(stats, write_file, indent=4, sort_keys=False)
+
+
+def check_for_missing_videos():
+    # need to add this as well once yt-dlp is fixed:
+    # not sure where it should be exactly? 
+    # ("https://www.youtube.com/@HarryMack/streams")    
+    channels = config["channels"]
+    for channel in channels:
+        get_video_list_from_channel(channel)
+
+
+
 if __name__ == "__main__":
-    VERSION = "2.0.3"
+    VERSION = "2.1.0"
     CONFIG_PATH = "./config.yaml"
+    STATS_PATH = "./logs/stats.txt"
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)
     database_setup()
-    get_video_list_from_channel("https://www.youtube.com/@HarryMack")
     import_sources_and_tracks(config)
+    check_for_missing_videos()
     verify_files_exist()
     download_source_files()
     create_missing_tracks()
     plex = connect_to_server()
     plex_update_library(plex, "Harry Mack")
+
+    write_stats_to_file(STATS_PATH)
     logger.success("Program finished successfully")

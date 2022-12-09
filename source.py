@@ -295,7 +295,7 @@ class Source:
         self.logger.debug("ffmpeg arguments:  " + " ".join(args))
         ffmpeg = subprocess.run(args)
 
-        #if ffmpeg.returncode:
+        # if ffmpeg.returncode:
         #    print(f"FFMPEG returned: {ffmpeg.returncode}.  Quitting")
         #    exit(1)
 
@@ -327,7 +327,7 @@ class Source:
         if len(file_list) == 1:
             return file_list[0]
         elif len(file_list) > 1:
-            
+
             self.logger.debug(
                 "Too many files found: %s", os.listdir(self.root_directory)
             )
