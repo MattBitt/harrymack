@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 import random
 import json
+from flask import Flask
 
 # from unused.WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
