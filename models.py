@@ -60,13 +60,13 @@ class ManyToMany(BaseModel):
     def remove_tag_from_track(cls, track, field: str, tag_str: str):
         tag = Tag.get(tag=tag_str)
         if tag:
-            cls.delete().where(cls.track == track.id, cls.tag == tag.id).execute()
+            cls.delete().where(cls.track == track.id, cls.tag == tag.id).execute()  # type: ignore
         else:
             print(f"Tag {tag_str} is not associated with this track")
 
     @classmethod
     def track_has_x(cls, track, tag):
-        track_tag = cls.select().where(cls.track == track.id, cls.tag == tag.id)
+        track_tag = cls.select().where(cls.track == track.id, cls.tag == tag.id)  # type: ignore
         if track_tag:
             return True
         else:
@@ -112,13 +112,37 @@ class Source(BaseModel):
 
     @classmethod
     def do_not_exist(cls) -> ModelSelect:
-        result = cls.select().where(cls.audio_exists == 0, cls.ignore == 0)  # ignore
+        result = cls.select().where(cls.audio_exists == 0, cls.ignore == 0)
         return result
 
     @classmethod
     def with_video_type(cls, video_type: str) -> ModelSelect:
         result = cls.select().where(cls.video_type == video_type)
         return result
+
+    @property
+    def serialize(self):
+        data = {
+            "album_name": str(self.album_name).strip(),
+            "audio_exists": str(self.audio_exists).strip(),
+            "audio_file": str(self.audio_file).strip(),
+            "created_date": str(self.created_date).strip(),
+            "description_file": str(self.description_file).strip(),
+            "episode_number": str(self.episode_number).strip(),
+            "id": self.id,
+            "ignore": str(self.ignore).strip(),
+            "image_file": str(self.image_file).strip(),
+            "split_by_silence": str(self.split_by_silence).strip(),
+            "upload_date": str(self.upload_date).strip(),
+            "url": str(self.url).strip(),
+            "video_exists": str(self.video_exists).strip(),
+            "video_file": str(self.video_file).strip(),
+            "video_title": str(self.video_title).strip(),
+            "video_type": str(self.video_type).strip(),
+            "youtube_id": str(self.youtube_id).strip(),
+        }
+
+        return data
 
 
 class Track(BaseModel):
@@ -134,7 +158,6 @@ class Track(BaseModel):
     plex_rating = IntegerField()
     producer = CharField()
     source = ForeignKeyField(Source, backref="tracks")
-
     start_time = TimeField()  # should these be stored as ms and converted as needed?
     track_number = IntegerField(null=True)
     track_title = CharField()
@@ -148,6 +171,27 @@ class Track(BaseModel):
     def with_album(cls, album: str) -> ModelSelect:
         result = cls.select().where(cls.album_name == album)
         return result
+
+    @property
+    def serialize(self):
+        data = {
+            "album_name": str(self.album_name).strip(),
+            "artist_name": str(self.artist_name).strip(),
+            "beat_name": str(self.beat_name).strip(),
+            "created_date": str(self.created_date).strip(),
+            "end_time": str(self.end_time).strip(),
+            "exists": str(self.exists).strip(),
+            "file_path": str(self.file_path).strip(),
+            "id": str(self.id).strip(),
+            "plex_id": str(self.plex_id).strip(),
+            "plex_rating": str(self.plex_rating).strip(),
+            "producer": str(self.producer).strip(),
+            "source": str(self.source).strip(),
+            "start_time": str(self.start_time).strip(),
+            "track_number": str(self.track_number).strip(),
+            "track_title": str(self.track_title).strip(),
+        }
+        return data
 
 
 class Word(BaseModel):

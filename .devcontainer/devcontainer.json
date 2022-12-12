@@ -56,7 +56,9 @@
 		"source=${localEnv:HOME}/harrymack_media/musicroot/,target=/tracks/,type=bind,consistency=cached"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": []
+	"forwardPorts": [
+		5000
+	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	// "postStartCommand": "git config --global user.email \"${localEnv:VSCODE_CONTAINER_GIT_EMAIL}\" && git config --global user.name \"${localEnv:VSCODE_CONTAINER_GIT_USER}\""

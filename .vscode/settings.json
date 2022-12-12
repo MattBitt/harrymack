@@ -6,10 +6,7 @@
     "python.testing.pytestEnabled": true,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestArgs": [
-        "tests",
-        "--durations=5",
-        "-v",
-        "--random-order"
+        "tests"
     ],
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,

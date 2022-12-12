@@ -11,6 +11,7 @@ ffmpeg==1.4
 filetype==1.1.0
 flake8==5.0.4
 Flask==2.2.2
+Flask-Admin==1.6.0
 Flask-Login==0.6.2
 idna==3.4
 iniconfig==1.1.1
@@ -46,4 +47,6 @@ tomli==2.0.1
 urllib3==1.26.12
 websockets==10.3
 Werkzeug==2.2.2
+wtf-peewee==3.0.4
+WTForms==3.0.1
 yt-dlp==2022.10.4

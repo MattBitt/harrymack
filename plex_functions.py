@@ -36,11 +36,27 @@ def add_mood(plex, library, track_title, mood):
         t[0].addMood(mood)
         return True
 
+def currently_playing():
+    plex = connect_to_server()
+    sess = plex.sessions()
+    libraries = ["Harry Mack Sources", "Harry Mack Tracks"]
+    if len(sess) > 0:
+        for s in sess:
+            if s.librarySectionTitle in libraries:
+                data = {
+                    "title": s.title,
+                    "library": s.librarySectionTitle,
+                    "current_time" : s.viewOffset
+                }
+                return data
+    else:
+        return {}
 
 if __name__ == "__main__":
-    plex = connect_to_server()
-    get_playlists(plex)
-    lib = plex.library.section("Harry Mack")
+    # plex = connect_to_server()
+    # get_playlists(plex)
+    # lib = plex.library.section("Harry Mack")
+    print(currently_playing())
     # for track in lib.all():
     # print(album.tracks()[0].media[0].parts[0].file)
     #    print(track)
@@ -49,4 +65,4 @@ if __name__ == "__main__":
     # print("Available fields:", availableFields)
     # print(len(lib.searchTracks()))
     # print(lib.searchTracks(title="BTB11.1 Intro"))
-    search_tracks(plex, "Harry Mack", "BTB11.1 Intro")
+#    search_tracks(plex, "Harry Mack", "BTB11.1 Intro")

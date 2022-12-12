@@ -32,24 +32,22 @@ class TrackImporter:
         # self.create_folder()
 
     def load_data(self, data_row, config):
-        self.config = config
-        # query = SourceTbl.select().where(SourceTbl.url == data_row["URL"])
-
-        self.start_time = data_row["StartTime"]
-        self.end_time = data_row["EndTime"]
-        self.root_directory = Path(config[config["enviornment"]]["music_root"])
-        self.filename = data_row["Filename"]
-        self.extension = ".mp3"
-        self.filename = data_row["Title"]
-
-        self.url = data_row["URL"]
-        self.beat_name = data_row["BeatName"]
-        self.producer = data_row["Producer"]
         self.artist_name = data_row["ArtistName"]
-        self.track_title = data_row["Title"]
+        self.beat_name = data_row["BeatName"]
+        self.config = config
         self.created_date = convert_date_time_object(datetime.now())
+        self.end_time = data_row["EndTime"]
+        self.extension = ".mp3"
+        # ! which of these is correct?
+        self.filename = data_row["Filename"]
+        self.filename = data_row["Title"]
         self.plex_id = ""
         self.plex_rating = 0
+        self.producer = data_row["Producer"]
+        self.root_directory = Path(config[config["enviornment"]]["music_root"])
+        self.start_time = data_row["StartTime"]
+        self.track_title = data_row["Title"]
+        self.url = data_row["URL"]
         self.words = ""
 
         query = SourceTbl.select().where(SourceTbl.url == self.url)
@@ -70,8 +68,6 @@ class TrackImporter:
         self.file_path = (
             self.root_directory / self.album_name / (self.filename + self.extension)
         )
-
-    #     return self.file_path.exists()
 
     def save_to_db(self) -> None:
 

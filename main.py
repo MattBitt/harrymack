@@ -526,7 +526,7 @@ def check_for_files_not_in_db():
         else:
             query = None
             logger.info("{} not found above", file)
-        
+
         if not query:
             stats["files_exist_but_not_in_db"].append(file)
 
