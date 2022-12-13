@@ -1,8 +1,12 @@
+import os
+print(os.getcwd())
+
 from flask import Flask, jsonify
-from models import Source, Track
+
 from plex_functions import currently_playing
 import flask_admin as admin
 from flask_admin.contrib.peewee import ModelView
+from models import Source, Track
 
 app = Flask(__name__)
 
@@ -86,7 +90,7 @@ def track_endpoint(track_id):
 def whatsplaying():
     return jsonify(currently_playing())
 
-admin = admin.Admin(app, name='ESCUCHARR')
+admin = admin.Admin(app, name='ESCUCHARR!!!')
 admin.add_view(SourceAdmin(Source))
 admin.add_view(TrackAdmin(Track))
-app.run(debug=True, host="0.0.0.0")
+app.run(debug=True, host='0.0.0.0')

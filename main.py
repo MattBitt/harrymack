@@ -554,7 +554,12 @@ if __name__ == "__main__":
     download_source_files()
     create_missing_tracks()
     plex = connect_to_server()
-    plex_update_library(plex, "Harry Mack")
+    plex_update_library(plex, "Harry Mack Tracks")
+    plex_update_library(plex, "Harry Mack Sources")
 
     write_stats_to_file(STATS_PATH)
+    
+    
     logger.success("Program finished successfully")
+    logger.success("Starting webserver")
+
