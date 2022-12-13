@@ -93,4 +93,4 @@ def whatsplaying():
 admin = admin.Admin(app, name='ESCUCHARR!!!')
 admin.add_view(SourceAdmin(Source))
 admin.add_view(TrackAdmin(Track))
-app.run(debug=True, host='0.0.0.0')
+app.run(debug=False, host='0.0.0.0')
