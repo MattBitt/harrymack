@@ -86,6 +86,20 @@ def load_track_data(path):
     return track_info_list
 
 
+def check_for_env_variables():
+    required_env_variables = [
+        "ENVIORNMENT",
+        "LOGLEVEL",
+        "PLEXTOKEN",
+        "TAUTULLITOKEN",
+        "HOME",
+        "FLASK_APP",
+        "FLASK_DEBUG",
+    ]
+    for env_var in required_env_variables:
+        if env_var not in os.environ:
+            raise KeyError(env_var)
+
 def import_from_csv(csv_name):
     if not os.path.exists(csv_name):
         raise FileNotFoundError(f"File {csv_name} not found")
@@ -544,6 +558,7 @@ if __name__ == "__main__":
     VERSION = "2.1.0"
     CONFIG_PATH = "./config.yaml"
     STATS_PATH = "./logs/stats.txt"
+    check_for_env_variables()
     config = load_config(CONFIG_PATH)
     logger = setup_logging()
     logger.success("Starting Program ({})", VERSION)

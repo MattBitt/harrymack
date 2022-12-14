@@ -44,7 +44,7 @@ class ManyToMany(BaseModel):
             new_record = model.add(field_str)
         match field:
             case "word":
-                cls.create(track=track, word=new_record)   # type: ignore
+                cls.create(track=track, word=new_record)  # type: ignore
             case "tag":
                 cls.create(track=track, tag=new_record)  # type: ignore
             case _:

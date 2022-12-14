@@ -7,7 +7,7 @@ from flask import Flask, jsonify
 from plex_functions import currently_playing
 import flask_admin as admin
 from flask_admin.contrib.peewee import ModelView
-from models import Source, Track, Producer, Beat, Word, Tag, database_setup
+from models import Source, Track, Producer, Beat, Word, Tag, TrackWord, database_setup
 
 database_setup()
 app = Flask(__name__)
@@ -29,6 +29,7 @@ class SourceAdmin(ModelView):
 
 
 class TrackAdmin(ModelView):
+    column_hide_backrefs = False
     column_exclude_list = ["artist_name"]
     column_sortable_list = ("track_title", "album_name", "created_date")
     column_searchable_list = ("track_title", "album_name")
@@ -39,7 +40,7 @@ class TrackAdmin(ModelView):
     #         'fields': (User.username, 'email')
     #     }
     # }
-
+ 
 
 class BeatAdmin(ModelView):
     column_sortable_list = ["beat_name"]
@@ -66,7 +67,8 @@ class WordAdmin(ModelView):
 
 @app.route("/")
 def home():
-    return '<a href="/admin/">Click me to get to Admin!</a>'
+    return """<a href="/admin/">Click me to get to Admin!</a>"""
+  
 
 
 @app.route("/api/v1/sources", methods=["GET", "POST"])
