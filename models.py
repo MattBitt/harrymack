@@ -44,9 +44,9 @@ class ManyToMany(BaseModel):
             new_record = model.add(field_str)
         match field:
             case "word":
-                cls.create(track=track, word=new_record)
+                cls.create(track=track, word=new_record)   # type: ignore
             case "tag":
-                cls.create(track=track, tag=new_record)
+                cls.create(track=track, tag=new_record)  # type: ignore
             case _:
                 model = None
 
@@ -240,6 +240,16 @@ class TrackWord(ManyToMany):
     track = ForeignKeyField(Track)
     word = ForeignKeyField(Word)
 
+
+class Beat(BaseModel):
+    id = AutoField(primary_key=True)
+    beat_name = CharField()
+
+
+class Producer(BaseModel):
+    id = AutoField(primary_key=True)
+    producer_name = CharField()
+    beat = ForeignKeyField(Beat, backref="producers")
     # @classmethod
     # def add_word_to_track(cls, track: Track, word_str: str):
     #     word = Word.add(word_str)
@@ -271,7 +281,9 @@ class TrackWord(ManyToMany):
 def database_setup():
 
     database.connect()
-    database.create_tables([Source, Track, Word, Tag, TrackTag, TrackWord])
+    database.create_tables(
+        [Source, Track, Word, Tag, TrackTag, TrackWord, Beat, Producer]
+    )
 
 
 def find_words(string):

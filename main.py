@@ -558,8 +558,6 @@ if __name__ == "__main__":
     plex_update_library(plex, "Harry Mack Sources")
 
     write_stats_to_file(STATS_PATH)
-    
-    
+
     logger.success("Program finished successfully")
     logger.success("Starting webserver")
-

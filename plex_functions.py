@@ -36,6 +36,7 @@ def add_mood(plex, library, track_title, mood):
         t[0].addMood(mood)
         return True
 
+
 def currently_playing():
     plex = connect_to_server()
     sess = plex.sessions()
@@ -46,11 +47,12 @@ def currently_playing():
                 data = {
                     "title": s.title,
                     "library": s.librarySectionTitle,
-                    "current_time" : s.viewOffset
+                    "current_time": s.viewOffset,
                 }
                 return data
     else:
         return {}
+
 
 if __name__ == "__main__":
     # plex = connect_to_server()
