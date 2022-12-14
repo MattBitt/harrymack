@@ -7,8 +7,9 @@ from flask import Flask, jsonify
 from plex_functions import currently_playing
 import flask_admin as admin
 from flask_admin.contrib.peewee import ModelView
-from models import Source, Track, Producer, Beat, Word, Tag
+from models import Source, Track, Producer, Beat, Word, Tag, database_setup
 
+database_setup()
 app = Flask(__name__)
 
 

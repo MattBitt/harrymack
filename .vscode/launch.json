@@ -17,7 +17,7 @@
                 "run",
             ],
             "jinja": true,
-            "justMyCode": false
+            "justMyCode": true
         },
         {
             "name": "Python: Current File",
