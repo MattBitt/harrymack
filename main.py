@@ -20,6 +20,7 @@ from flask import Flask
 
 # from unused.WordGrid import resize_image, TextArea, WordGrid, Word, prepare_image
 from plex_functions import plex_update_library, connect_to_server, add_mood
+from playhouse.shortcuts import model_to_dict, dict_to_model
 
 from source import SourceImporter, Source
 from track import TrackImporter, Track
@@ -99,6 +100,7 @@ def check_for_env_variables():
     for env_var in required_env_variables:
         if env_var not in os.environ:
             raise KeyError(env_var)
+
 
 def import_from_csv(csv_name):
     if not os.path.exists(csv_name):
@@ -552,6 +554,7 @@ def check_for_missing_videos():
     channels = config["channels"]
     for channel in channels:
         get_video_list_from_channel(channel)
+
 
 
 if __name__ == "__main__":

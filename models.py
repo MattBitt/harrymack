@@ -129,7 +129,7 @@ class Source(BaseModel):
             "created_date": str(self.created_date).strip(),
             "description_file": str(self.description_file).strip(),
             "episode_number": str(self.episode_number).strip(),
-            "id": self.id,
+            "id": str(self.id).strip(),
             "ignore": str(self.ignore).strip(),
             "image_file": str(self.image_file).strip(),
             "split_by_silence": str(self.split_by_silence).strip(),
@@ -190,6 +190,7 @@ class Track(BaseModel):
             "start_time": str(self.start_time).strip(),
             "track_number": str(self.track_number).strip(),
             "track_title": str(self.track_title).strip(),
+            "track_url" : str(self.id).strip()
         }
         return data
 

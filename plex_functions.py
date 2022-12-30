@@ -41,14 +41,21 @@ def currently_playing():
     plex = connect_to_server()
     sess = plex.sessions()
     libraries = ["Harry Mack Sources", "Harry Mack Tracks"]
+    library_type = {}
+    library_type["Harry Mack Sources"] = "source"
+    library_type["Harry Mack Tracks"] = "track"
     if len(sess) > 0:
         for s in sess:
             if s.librarySectionTitle in libraries:
-                data = {
-                    "title": s.title,
-                    "library": s.librarySectionTitle,
-                    "current_time": s.viewOffset,
-                }
+                data = [
+                    {
+                        "library_type": library_type[s.librarySectionTitle],
+                        "title": s.title,
+                        "library": s.librarySectionTitle,
+                        "current_time": s.viewOffset,
+                        "video_file": s.locations[0],
+                    }
+                ]
                 return data
     else:
         return {}
